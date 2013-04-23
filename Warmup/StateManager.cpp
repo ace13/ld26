@@ -50,6 +50,8 @@ void IState::addedToEntity()
     requestMessage("LD26.Update", &IState::update);
     requestMessage("LD26.Draw",   &IState::draw);
     requestMessage("LD26.DrawUi", &IState::drawUi);
+
+    setup();
 }
 
 StateManager::Internals::Internals(StateManager& man) : Kunlaboro::Component("StateManager.Internals"), mState(man) { }

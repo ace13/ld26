@@ -15,6 +15,7 @@ public:
 
     void addedToEntity();
 
+    virtual void setup() = 0;
     virtual void update(float dt) = 0;
     virtual void draw(sf::RenderTarget& target) = 0;
     virtual void drawUi(sf::RenderTarget& target) = 0;

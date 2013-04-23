@@ -1,5 +1,6 @@
 #include "MainClass.hpp"
 #include "WarmupState.hpp"
+#include "Components.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
@@ -16,7 +17,12 @@ MainClass::MainClass(int argc, char** argv)
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
 
-    mManager.getSystem().registerComponent<GameState>("Warmup");
+    Kunlaboro::EntitySystem& sys = mManager.getSystem();
+
+    sys.registerComponent<Components::Physical>("Components.Physical");
+    sys.registerComponent<Components::Drawable>("Components.Drawable");
+    sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
+    sys.registerComponent<GameState>("Warmup");
 }
 
 MainClass::~MainClass()
@@ -82,9 +88,11 @@ int MainClass::operator()()
 
         app.setView(mGame);
         mManager.draw(app);
+        mGame = app.getView();
 
         app.setView(mUi);
         mManager.drawUi(app);
+        mUi = app.getView();
 
         app.display();
     }
