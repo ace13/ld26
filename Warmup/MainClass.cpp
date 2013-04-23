@@ -38,6 +38,8 @@ int MainClass::operator()()
         app.create(sf::VideoMode::getDesktopMode(), "Ludumdare #26 Warmup", sf::Style::None);
     else
         app.create(sf::VideoMode(mSettings.getInt("Width"), mSettings.getInt("Height")), "Ludumdare #26 Warmup");
+
+    app.setFramerateLimit(60);
     sf::Event ev;
     sf::Clock clock;
 

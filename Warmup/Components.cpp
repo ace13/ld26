@@ -12,13 +12,13 @@ Physical::Physical() : Kunlaboro::Component("Components.Physical")
 
 void Physical::addedToEntity()
 {
-    requestMessage("GetPos",    [this](Kunlaboro::Message& msg){ msg.payload = sf::Vector2f(mX, mY); msg.handled = true; }, true);
-    requestMessage("GetRot",    [this](Kunlaboro::Message& msg){ msg.payload = mRot; msg.handled = true; }, true);
-    requestMessage("GetRadius", [this](Kunlaboro::Message& msg){ msg.payload = mRadius; msg.handled = true; }, true);
+    requestMessage("GetPos",    [this](Kunlaboro::Message& msg){ msg.payload = getPos(); msg.handled = true; }, true);
+    requestMessage("GetRot",    [this](Kunlaboro::Message& msg){ msg.payload = getRot(); msg.handled = true; }, true);
+    requestMessage("GetRadius", [this](Kunlaboro::Message& msg){ msg.payload = getRadius(); msg.handled = true; }, true);
 
-    requestMessage("SetPos",    [this](const Kunlaboro::Message& msg){ sf::Vector2f pos = boost::any_cast<sf::Vector2f>(msg.payload); mX = pos.x; mY = pos.y; }, true);
-    requestMessage("SetRot",    [this](const Kunlaboro::Message& msg){ mRot = boost::any_cast<float>(msg.payload); }, true);
-    requestMessage("SetRadius", [this](const Kunlaboro::Message& msg){ mRadius = boost::any_cast<float>(msg.payload); }, true);
+    requestMessage("SetPos",    [this](const Kunlaboro::Message& msg){ setPos(boost::any_cast<sf::Vector2f>(msg.payload)); }, true);
+    requestMessage("SetRot",    [this](const Kunlaboro::Message& msg){ setRot(boost::any_cast<float>(msg.payload)); }, true);
+    requestMessage("SetRadius", [this](const Kunlaboro::Message& msg){ setRadius(boost::any_cast<float>(msg.payload)); }, true);
 }
 
 Drawable::Drawable() : Kunlaboro::Component("Components.Drawable")
@@ -27,6 +27,8 @@ Drawable::Drawable() : Kunlaboro::Component("Components.Drawable")
 
 void Drawable::addedToEntity()
 {
+    requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg){ mPhysical = static_cast<Physical*>(msg.sender); });
+
     requestMessage("SetTexture", [this](const Kunlaboro::Message& msg){ mTex.loadFromFile(boost::any_cast<std::string>(msg.payload)); }, true);
     requestMessage("LD26.Draw",  [this](const Kunlaboro::Message& msg)
         {
@@ -35,8 +37,8 @@ void Drawable::addedToEntity()
             sf::Sprite sprite(mTex);
             sprite.setOrigin((sf::Vector2f)mTex.getSize()/2.f);
 
-            sprite.setPosition(boost::any_cast<sf::Vector2f>(sendQuestionToEntity(getOwnerId(), "GetPos").payload));
-            sprite.setRotation(boost::any_cast<float>(sendQuestionToEntity(getOwnerId(), "GetRot").payload));
+            sprite.setPosition(mPhysical->getPos());
+            sprite.setRotation(mPhysical->getRot());
 
             target.draw(sprite);
         });
@@ -67,6 +69,12 @@ void SpatialContainer::setImpl(Impl* impl)
         delete mImpl;
 
     mImpl = impl;
+}
+
+void SpatialContainer::addEntity(Kunlaboro::EntityId eid)
+{
+    if (mImpl != NULL)
+        mImpl->addObject(eid);
 }
 
 QuadTree::QuadTree(SpatialContainer& cont, sf::FloatRect bounds, int level, int max, QuadTree* qt):
@@ -121,15 +129,17 @@ void QuadTree::addObject(Kunlaboro::EntityId eid)
         return;
     }
 
-    if (contains(mNW, eid))
+    sf::Vector2f pos = getPosition(eid);
+
+    if (contains(mNW, pos))
         mNW->addObject(eid);
-    else if (contains(mNE, eid))
+    else if (contains(mNE, pos))
         mNE->addObject(eid);
-    else if (contains(mSW, eid))
+    else if (contains(mSW, pos))
         mSW->addObject(eid);
-    else if (contains(mSE, eid))
+    else if (contains(mSE, pos))
         mSE->addObject(eid);
-    else if (contains(this, eid))
+    else if (contains(this, pos))
         mContained[eid] = NULL;
     else if (mParent != NULL)
         mParent->addObject(eid);
@@ -201,12 +211,20 @@ void QuadTree::update(float dt)
         mUpdate = 0;
 
         if (!mContained.empty())
-            for (auto it = mContained.begin(), end = mContained.end(); it++ != end;)
-                if (!contains(this, it->first))
+            for (auto it = mContained.begin(); it != mContained.end();)
+            {
+                if (!contains(this, getPosition(it->first)))
                 {
                     mParent->addObject(it->first);
-                    mContained.erase(it);
+
+                    if (mContained.count(it->first) > 0)
+                        mContained.erase(it++);
+                    else
+                        ++it;
                 }
+                else
+                    ++it;
+            }
     }
 
     if (mLevel != mMaxLevel)
@@ -223,7 +241,10 @@ void QuadTree::draw(sf::RenderTarget& target)
     sf::RectangleShape rect;
     rect.setPosition(mBounds.left, mBounds.top);
     rect.setSize(sf::Vector2f(mBounds.width, mBounds.height));
-    rect.setFillColor(sf::Color::Transparent);
+    if (mContained.empty())
+        rect.setFillColor(sf::Color::Transparent);
+    else
+        rect.setFillColor(sf::Color::Green);
     rect.setOutlineColor(sf::Color::White);
     rect.setOutlineThickness(1.f);
 
@@ -238,30 +259,45 @@ void QuadTree::draw(sf::RenderTarget& target)
     }
 }
 
-bool QuadTree::contains(QuadTree* qt, Kunlaboro::EntityId eid)
+sf::Vector2f QuadTree::getPosition(Kunlaboro::EntityId eid, bool store)
 {
     Kunlaboro::Message message(Kunlaboro::Type_Message, &mContainer);
     Kunlaboro::EntitySystem& system = *mContainer.getEntitySystem();
-    auto& it = qt->mContained[eid];
-
+    
     sf::Vector2f pos;
-
-    if (it == NULL)
+    if (store)
+    {
+        auto& it = mContained[eid];
+        if (it == NULL)
+        {
+            system.sendLocalMessage(eid, system.getMessageRequestId(Kunlaboro::Reason_Message, "GetPos"), message);
+            if (message.handled)
+            {
+                if (store)
+                    it = static_cast<Physical*>(message.sender);
+                pos = boost::any_cast<sf::Vector2f>(message.payload);
+            }
+            else if (store)
+            {
+                mContained.erase(eid);
+            }   
+        }
+        else
+        pos = it->getPos();
+    }
+    else
     {
         system.sendLocalMessage(eid, system.getMessageRequestId(Kunlaboro::Reason_Message, "GetPos"), message);
         if (message.handled)
         {
-            it = static_cast<Physical*>(message.sender);
             pos = boost::any_cast<sf::Vector2f>(message.payload);
         }
-        else
-        {
-            qt->mContained.erase(eid);
-            return false;
-        }   
     }
-    else
-        pos = it->getPos();
 
+    return pos;
+}
+
+bool QuadTree::contains(QuadTree* qt, sf::Vector2f pos)
+{
     return qt->mBounds.contains(pos);
 }

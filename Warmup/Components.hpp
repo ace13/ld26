@@ -14,6 +14,10 @@ public:
 
     void addedToEntity();
 
+    void setPos(sf::Vector2f pos) { mX = pos.x; mY = pos.y; }
+    void setRot(float rot) { mRot = rot; }
+    void setRadius(float rad) { mRadius = rad; }
+
     inline sf::Vector2f getPos() const { return sf::Vector2f(mX,mY); }
     float getRot() const { return mRot; }
     float getRadius() const { return mRadius; }
@@ -30,6 +34,7 @@ public:
     void addedToEntity();
 
 private:
+    Physical* mPhysical;
     sf::Texture mTex;
 };
 
@@ -40,6 +45,8 @@ public:
     ~SpatialContainer();
 
     void addedToEntity();
+
+    void addEntity(Kunlaboro::EntityId);
 
     class Impl
     {
@@ -79,7 +86,8 @@ public:
     virtual void draw(sf::RenderTarget&);
 
 private:
-    bool contains(QuadTree*, Kunlaboro::EntityId);
+    sf::Vector2f getPosition(Kunlaboro::EntityId, bool store = false);
+    bool contains(QuadTree*, sf::Vector2f);
 
     QuadTree* mParent;
     SpatialContainer& mContainer;
