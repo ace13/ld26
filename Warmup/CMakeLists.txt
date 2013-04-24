@@ -25,7 +25,7 @@ SET(Warmup_Source
 SET(Warmup_Code ${Warmup_Source} ${Warmup_Headers})
 
 FIND_PACKAGE(SFML REQUIRED COMPONENTS system window graphics audio)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS system)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
 
 INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -43,4 +43,5 @@ ADD_EXECUTABLE(LD26_Warmup ${Warmup_Code})
 TARGET_LINK_LIBRARIES(LD26_Warmup
 	Kunlaboro
 	${SFML_LIBRARIES}
+	${Boost_LIBRARIES}
 )

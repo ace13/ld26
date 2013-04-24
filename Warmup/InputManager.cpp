@@ -1,5 +1,6 @@
 #include "InputManager.hpp"
 #include <SFML/Window/Event.hpp>
+#include <cmath>
 
 InputManager::InputManager()
 {
@@ -51,7 +52,7 @@ void InputManager::handleEvent(const sf::Event& ev)
             found.Axis.Joystick = ev.joystickMove.joystickId;
             found.Axis.Axis = ev.joystickMove.axis;
             found.Axis.Positive = ev.joystickMove.position > 0;
-            found.Value = std::abs(ev.joystickMove.position)/100.f;
+            found.Value = fabs(ev.joystickMove.position)/100.f;
         }
         break;
     }

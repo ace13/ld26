@@ -30,15 +30,18 @@ Kunlaboro::EntitySystem& StateManager::getSystem() { return mSystem; }
 
 void StateManager::update(float dt)
 {
-    mSystem.sendGlobalMessage(mRUpdate, Kunlaboro::Message(Kunlaboro::Type_Message, NULL, dt));
+    Kunlaboro::Message msg(Kunlaboro::Type_Message, NULL, dt);
+    mSystem.sendGlobalMessage(mRUpdate, msg);
 }
 void StateManager::draw(sf::RenderTarget& target)
 {
-    mSystem.sendGlobalMessage(mRDraw, Kunlaboro::Message(Kunlaboro::Type_Message, NULL, &target));
+    Kunlaboro::Message msg(Kunlaboro::Type_Message, NULL, &target);
+    mSystem.sendGlobalMessage(mRDraw, msg);
 }
 void StateManager::drawUi(sf::RenderTarget& target)
 {
-    mSystem.sendGlobalMessage(mRDrawUi, Kunlaboro::Message(Kunlaboro::Type_Message, NULL, &target));
+    Kunlaboro::Message msg(Kunlaboro::Type_Message, NULL, &target);
+    mSystem.sendGlobalMessage(mRDrawUi, msg);
 }
 
 IState::IState(const std::string& name) : Kunlaboro::Component(name)
