@@ -20,7 +20,8 @@ MainClass::MainClass(int argc, char** argv)
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
     sys.registerComponent<Components::Physical>("Components.Physical");
-    sys.registerComponent<Components::Drawable>("Components.Drawable");
+    sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
+    sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
     sys.registerComponent<GameState>("Warmup");
 }

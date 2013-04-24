@@ -1,5 +1,6 @@
 #include <Kunlaboro/Component.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/Shape.hpp>
 #include <unordered_map>
 
 #pragma once
@@ -26,16 +27,34 @@ private:
     float mX, mY, mRot, mRadius;
 };
 
-class Drawable : public Kunlaboro::Component
+class TexturedDrawable : public Kunlaboro::Component
 {
 public:
-    Drawable();
+    TexturedDrawable();
 
     void addedToEntity();
+
+    void setTexture(const std::string&);
 
 private:
     Physical* mPhysical;
     sf::Texture mTex;
+};
+
+class ShapeDrawable : public Kunlaboro::Component
+{
+public:
+    ShapeDrawable();
+    ~ShapeDrawable();
+
+    void addedToEntity();
+
+    void setShape(sf::Shape*);
+    sf::Shape* getShape() const;
+
+private:
+    Physical* mPhysical;
+    sf::Shape* mShape;
 };
 
 class SpatialContainer : public Kunlaboro::Component

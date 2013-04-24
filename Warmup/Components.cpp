@@ -21,17 +21,25 @@ void Physical::addedToEntity()
     requestMessage("SetRadius", [this](const Kunlaboro::Message& msg){ setRadius(boost::any_cast<float>(msg.payload)); }, true);
 }
 
-Drawable::Drawable() : Kunlaboro::Component("Components.Drawable")
+TexturedDrawable::TexturedDrawable() : Kunlaboro::Component("Components.TexturedDrawable")
 {
 }
 
-void Drawable::addedToEntity()
+void TexturedDrawable::setTexture(const std::string& file)
+{
+    mTex.loadFromFile(file);
+}
+
+void TexturedDrawable::addedToEntity()
 {
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg){ mPhysical = static_cast<Physical*>(msg.sender); });
 
-    requestMessage("SetTexture", [this](const Kunlaboro::Message& msg){ mTex.loadFromFile(boost::any_cast<std::string>(msg.payload)); }, true);
+    requestMessage("SetTexture", [this](const Kunlaboro::Message& msg){ setTexture(boost::any_cast<std::string>(msg.payload)); }, true);
     requestMessage("LD26.Draw",  [this](const Kunlaboro::Message& msg)
         {
+            if (mPhysical == NULL || mTex.getSize() == sf::Vector2u())
+                return;
+
             sf::RenderTarget& target = *boost::any_cast<sf::RenderTarget*>(msg.payload);
 
             sf::Sprite sprite(mTex);
@@ -41,6 +49,57 @@ void Drawable::addedToEntity()
             sprite.setRotation(mPhysical->getRot());
 
             target.draw(sprite);
+        });
+}
+
+ShapeDrawable::ShapeDrawable() : Kunlaboro::Component("Components.ShapeDrawable"), mPhysical(NULL), mShape(NULL)
+{
+}
+
+ShapeDrawable::~ShapeDrawable()
+{
+    if (mShape != NULL)
+        delete mShape;
+}
+
+void ShapeDrawable::setShape(sf::Shape* shape)
+{
+    if (mShape != NULL)
+        delete mShape;
+    mShape = shape;
+}
+
+sf::Shape* ShapeDrawable::getShape() const
+{
+    return mShape;
+}
+
+void ShapeDrawable::addedToEntity()
+{
+    requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) {
+        mPhysical = static_cast<Physical*>(msg.sender);
+    });
+
+    requestMessage("GetShape", [this](Kunlaboro::Message& msg){ msg.payload = getShape(); msg.handled = true; }, true);
+    requestMessage("SetShape", [this](const Kunlaboro::Message& msg){ setShape(boost::any_cast<sf::Shape*>(msg.payload)); }, true);
+    requestMessage("LD26.Draw",  [this](const Kunlaboro::Message& msg) {
+            if (mShape == NULL || mPhysical == NULL)
+                return;
+
+            sf::RenderTarget& target = *boost::any_cast<sf::RenderTarget*>(msg.payload);
+
+            sf::Vector2f size;
+            {
+                sf::FloatRect rect = mShape->getLocalBounds();
+                size.x = rect.width;
+                size.y = rect.height;
+            }
+            mShape->setOrigin(size/2.f);
+
+            mShape->setPosition(mPhysical->getPos());
+            mShape->setRotation(mPhysical->getRot());
+
+            target.draw(*mShape);
         });
 }
 
@@ -58,6 +117,7 @@ void SpatialContainer::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->update(boost::any_cast<float>(msg.payload)); });
     requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
+    changeRequestPriority("LD26.Draw", -1);
 
     requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->addObject(msg.sender->getOwnerId()); msg.handled = true; }, true);
     requestMessage("GetObjects", [this](Kunlaboro::Message& msg) { if (mImpl == NULL) return; msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload)); msg.handled = true; });

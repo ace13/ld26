@@ -43,5 +43,10 @@ ADD_EXECUTABLE(LD26_Warmup ${Warmup_Code})
 TARGET_LINK_LIBRARIES(LD26_Warmup
 	Kunlaboro
 	${SFML_LIBRARIES}
-	${Boost_LIBRARIES}
 )
+
+if (NOT WIN32)
+	TARGET_LINK_LIBRARIES(LD26_Warmup
+		${Boost_LIBRARIES}
+	)
+endif()

@@ -21,9 +21,32 @@ void GameState::setup()
     sys.finalizeEntity(mWorldID);
 
     Kunlaboro::EntityId id = sys.createEntity();
+
     Components::Physical* phys = static_cast<Components::Physical*>(sys.createComponent("Components.Physical"));
     phys->setPos(sf::Vector2f(888, 189));
+    phys->setRadius(10);
+    phys->setRot(0);
     sys.addComponent(id, phys);
+    
+    Components::ShapeDrawable* shape = static_cast<Components::ShapeDrawable*>(sys.createComponent("Components.ShapeDrawable"));
+    {   
+        sf::ConvexShape* conv = new sf::ConvexShape(4);
+        
+        conv->setFillColor(sf::Color::Transparent);
+        conv->setOutlineColor(sf::Color::White);
+        conv->setOutlineThickness(3);
+
+        conv->setPoint(0, sf::Vector2f(0, -64));
+        conv->setPoint(1, sf::Vector2f(-32, 16));
+        conv->setPoint(2, sf::Vector2f(32, 16));
+        conv->setPoint(3, sf::Vector2f(0, -64));
+
+        shape->setShape(conv);
+    }
+    sys.addComponent(id, shape);
+
+    
+
     sys.finalizeEntity(id);
 
     cont->addEntity(id);
@@ -31,7 +54,6 @@ void GameState::setup()
 
 void GameState::update(float dt)
 {
-
 }
 
 void GameState::draw(sf::RenderTarget& target)
