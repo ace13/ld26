@@ -1,6 +1,7 @@
 #include "MainClass.hpp"
 #include "WarmupState.hpp"
 #include "Components.hpp"
+#include "PlayerInput.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
@@ -14,6 +15,23 @@ MainClass::MainClass(int argc, char** argv)
 
     mSettings.handleArgs(stack);
 
+    {
+        sf::Event ev;
+        ev.type = sf::Event::KeyPressed;
+        ev.key.code = sf::Keyboard::W;
+        ev.key.alt = ev.key.control = ev.key.shift = false;
+
+        mInput.addBind("Forward", ev);
+
+        ev.key.code = sf::Keyboard::A;
+
+        mInput.addBind("Left", ev);
+
+        ev.key.code = sf::Keyboard::D;
+
+        mInput.addBind("Right", ev);
+    }
+
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
 
@@ -23,6 +41,7 @@ MainClass::MainClass(int argc, char** argv)
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
     sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
+    sys.registerComponent<PlayerInput>("PlayerInput");
     sys.registerComponent<GameState>("Warmup");
 }
 

@@ -17,7 +17,49 @@ void InputManager::startBind(const std::string& bind)
         mCurrentlyBinding = bind;
 }
 
+void InputManager::addBind(const std::string& name, const sf::Event& bind)
+{
+    Input found = parseInput(bind);
+
+    if (found.Bind != Input::Bind_None && found.Value > 0.75f)
+    {
+        found.Value = 0;
+        mInputs[name] = found;
+    }
+}
+
 void InputManager::handleEvent(const sf::Event& ev)
+{
+    Input found = parseInput(ev);
+
+    if (found.Bind != Input::Bind_None)
+    {
+        if (!mCurrentlyBinding.empty() && found.Value > 0.75f)
+            mInputs[mCurrentlyBinding] = found;
+        else if (mCurrentlyBinding.empty())
+            for (auto it = mInputs.begin(), end = mInputs.end(); it != end; ++it)
+            {
+                if (it->second.Bind != found.Bind)
+                    continue;
+
+                bool equal = false;
+                switch(it->second.Bind)
+                {
+                case Input::Bind_Key:
+                    equal = found.Key.Alt == it->second.Key.Alt &&
+                            found.Key.Ctrl == it->second.Key.Ctrl &&
+                            found.Key.Shift == it->second.Key.Shift &&
+                            found.Key.Key == it->second.Key.Key;
+                    break;
+                }
+                
+                if (equal)
+                    it->second.Value = found.Value;
+            }
+    }
+}
+
+Input InputManager::parseInput(const sf::Event& ev)
 {
     Input found;
     found.Bind = Input::Bind_None;
@@ -57,19 +99,7 @@ void InputManager::handleEvent(const sf::Event& ev)
         break;
     }
 
-    if (found.Bind != Input::Bind_None)
-    {
-        if (!mCurrentlyBinding.empty() && found.Value > 0.75f)
-            mInputs[mCurrentlyBinding] = found;
-        else if (mCurrentlyBinding.empty())
-            for (auto it = mInputs.begin(), end = mInputs.end(); it != end; ++it)
-            {
-                if (it->second.Bind != found.Bind)
-                    continue;
-                
-                it->second.Value = found.Value;
-            }
-    }
+    return found;
 }
 
 float InputManager::getInput(const std::string& bind) const

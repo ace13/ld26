@@ -5,6 +5,7 @@ SET(Warmup_Headers
 	SettingsManager.hpp
 	StateManager.hpp
 
+	PlayerInput.hpp
 	WarmupState.hpp
 	Components.hpp
 )
@@ -18,6 +19,7 @@ SET(Warmup_Source
 	SettingsManager.cpp
 	StateManager.cpp
 
+	PlayerInput.cpp
 	WarmupState.cpp
 	Components.cpp
 )

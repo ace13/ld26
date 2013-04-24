@@ -46,12 +46,15 @@ public:
     InputManager();
     ~InputManager();
 
+    void addBind(const std::string&, const sf::Event& bind);
     void startBind(const std::string&);
     void handleEvent(const sf::Event&);
 
     float getInput(const std::string&) const;
 
 private:
+    Input parseInput(const sf::Event&);
+
     std::unordered_map<std::string, Input> mInputs;
     std::string mCurrentlyBinding;
 };

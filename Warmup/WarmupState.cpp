@@ -1,4 +1,5 @@
 #include "WarmupState.hpp"
+#include "PlayerInput.hpp"
 #include "Components.hpp"
 #include <SFML/Graphics.hpp>
 
@@ -22,6 +23,8 @@ void GameState::setup()
 
     Kunlaboro::EntityId id = sys.createEntity();
 
+    sys.addComponent(id, "PlayerInput");
+
     Components::Physical* phys = static_cast<Components::Physical*>(sys.createComponent("Components.Physical"));
     phys->setPos(sf::Vector2f(888, 189));
     phys->setRadius(10);
@@ -36,10 +39,10 @@ void GameState::setup()
         conv->setOutlineColor(sf::Color::White);
         conv->setOutlineThickness(3);
 
-        conv->setPoint(0, sf::Vector2f(0, -64));
-        conv->setPoint(1, sf::Vector2f(-32, 16));
-        conv->setPoint(2, sf::Vector2f(32, 16));
-        conv->setPoint(3, sf::Vector2f(0, -64));
+        conv->setPoint(0, sf::Vector2f(64, 0));
+        conv->setPoint(1, sf::Vector2f(-16, -16));
+        conv->setPoint(2, sf::Vector2f(-16, 16));
+        conv->setPoint(3, sf::Vector2f(64, 0));
 
         shape->setShape(conv);
     }

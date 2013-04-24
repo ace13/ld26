@@ -91,10 +91,10 @@ void ShapeDrawable::addedToEntity()
             sf::Vector2f size;
             {
                 sf::FloatRect rect = mShape->getLocalBounds();
-                size.x = rect.width;
-                size.y = rect.height;
+                size.x = rect.left + rect.width / 2.f;
+                size.y = rect.top + rect.height / 2.f;
             }
-            mShape->setOrigin(size/2.f);
+            mShape->setOrigin(size);
 
             mShape->setPosition(mPhysical->getPos());
             mShape->setRotation(mPhysical->getRot());
