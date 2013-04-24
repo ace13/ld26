@@ -16,6 +16,7 @@ public:
     StateManager();
     ~StateManager();
 
+    void setViews(sf::View& game, sf::View& ui);
     void setInput(InputManager&);
     void setSettings(SettingsManager&);
     InputManager* getInput();
@@ -42,6 +43,9 @@ private:
     Kunlaboro::EntitySystem mSystem;
     InputManager* mInput;
     SettingsManager* mSettings;
+
+    sf::View* mGameView;
+    sf::View* mUiView;
 
     Kunlaboro::RequestId mRUpdate, mRDraw, mRDrawUi;
 

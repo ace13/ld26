@@ -6,6 +6,7 @@ SettingsManager::SettingsManager()
     mSettings["Fullscreen"] = false;
     mSettings["Width"] = 800;
     mSettings["Height"] = 600;
+    mSettings["Bind"] = false;
 }
 
 SettingsManager::~SettingsManager()
@@ -22,6 +23,10 @@ void SettingsManager::handleArgs(std::list<std::string>& stack)
         if (val == "-f")
         {
             mSettings["Fullscreen"] = true;
+        }
+        else if (val == "-b")
+        {
+            mSettings["Bind"] = true;
         }
         else if (val == "-r")
         {

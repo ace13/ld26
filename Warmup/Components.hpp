@@ -8,6 +8,8 @@
 namespace Components
 {
  
+class SpatialContainer;
+
 class Physical : public Kunlaboro::Component
 {
 public:
@@ -15,16 +17,36 @@ public:
 
     void addedToEntity();
 
-    void setPos(sf::Vector2f pos) { mX = pos.x; mY = pos.y; }
-    void setRot(float rot) { mRot = rot; }
-    void setRadius(float rad) { mRadius = rad; }
+    inline void setPos(const sf::Vector2f& pos) { mX = pos.x; mY = pos.y; }
+    inline void setRot(float rot) { mRot = rot; }
+    inline void setRadius(float rad) { mRadius = rad; }
 
     inline sf::Vector2f getPos() const { return sf::Vector2f(mX,mY); }
-    float getRot() const { return mRot; }
-    float getRadius() const { return mRadius; }
+    inline float getRot() const { return mRot; }
+    inline float getRadius() const { return mRadius; }
+
+    inline bool hasContainer() const { return mContainer > 0; }
+    inline SpatialContainer* getContainer() const { return mContainer; }
+    inline void setContainer(SpatialContainer* id) { mContainer = id; }
 
 private:
     float mX, mY, mRot, mRadius;
+    SpatialContainer* mContainer;
+};
+
+class Inertia : public Kunlaboro::Component
+{
+public:
+    Inertia();
+
+    void addedToEntity();
+
+    inline sf::Vector2f getSpeed() const { return mInertia; }
+    void setSpeed(const sf::Vector2f& in) { mInertia = in; }
+
+private:
+    Physical* mPhysical;
+    sf::Vector2f mInertia;
 };
 
 class TexturedDrawable : public Kunlaboro::Component
@@ -67,17 +89,22 @@ public:
 
     void addEntity(Kunlaboro::EntityId);
 
+    inline sf::FloatRect getBounds() const { if (mImpl) return mImpl->getBounds(); }
+    inline void setBounds(const sf::FloatRect& r) { if (mImpl) mImpl->setBounds(r); }
+    inline std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos) { if (mImpl) return mImpl->getObjectsAt(pos); return std::vector<Kunlaboro::EntityId>(); }
+    inline void clear() { if (mImpl) mImpl->clear(); }
+
     class Impl
     {
     public:
         virtual void draw(sf::RenderTarget&) = 0;
         virtual void update(float dt) = 0;
 
-        virtual void setBounds(sf::FloatRect) = 0;
+        virtual void setBounds(const sf::FloatRect&) = 0;
         virtual sf::FloatRect getBounds() = 0;
 
         virtual void addObject(Kunlaboro::EntityId) = 0;
-        virtual std::vector<Kunlaboro::EntityId> getObjectsAt(sf::Vector2f pos) = 0;
+        virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos) = 0;
         virtual void clear() = 0;
     };
 
@@ -93,19 +120,20 @@ public:
     QuadTree(SpatialContainer&, sf::FloatRect bounds, int level, int max, QuadTree* parent = NULL);
     ~QuadTree();
 
-    virtual void setBounds(sf::FloatRect);
+    virtual void setBounds(const sf::FloatRect&);
     virtual sf::FloatRect getBounds();
 
     virtual void update(float dt);
 
-    virtual void addObject(Kunlaboro::EntityId);
-    virtual std::vector<Kunlaboro::EntityId> getObjectsAt(sf::Vector2f pos);
+    virtual void addObject(Kunlaboro::EntityId eid) { addObject(eid, NULL); }
+    virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos);
     virtual void clear();
 
     virtual void draw(sf::RenderTarget&);
 
 private:
-    sf::Vector2f getPosition(Kunlaboro::EntityId, bool store = false);
+    void addObject(Kunlaboro::EntityId, Physical* p);
+    sf::Vector2f getPosition(Kunlaboro::EntityId, Physical** p = NULL);
     bool contains(QuadTree*, sf::Vector2f);
 
     QuadTree* mParent;

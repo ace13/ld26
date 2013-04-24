@@ -7,6 +7,8 @@ namespace sf { class Event; }
 
 struct Input
 {
+    Input() : Bind(Bind_None), Value(0) { }
+
     enum
     {
         Bind_None,
@@ -49,6 +51,8 @@ public:
     void addBind(const std::string&, const sf::Event& bind);
     void startBind(const std::string&);
     void handleEvent(const sf::Event&);
+
+    inline bool isBinding() const { return !mCurrentlyBinding.empty(); }
 
     float getInput(const std::string&) const;
 

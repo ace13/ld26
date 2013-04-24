@@ -6,7 +6,7 @@
 
 using namespace Components;
 
-Physical::Physical() : Kunlaboro::Component("Components.Physical")
+Physical::Physical() : Kunlaboro::Component("Components.Physical"), mX(0), mY(0), mRot(0), mRadius(0), mContainer(NULL)
 {
 }
 
@@ -19,6 +19,21 @@ void Physical::addedToEntity()
     requestMessage("SetPos",    [this](const Kunlaboro::Message& msg){ setPos(boost::any_cast<sf::Vector2f>(msg.payload)); }, true);
     requestMessage("SetRot",    [this](const Kunlaboro::Message& msg){ setRot(boost::any_cast<float>(msg.payload)); }, true);
     requestMessage("SetRadius", [this](const Kunlaboro::Message& msg){ setRadius(boost::any_cast<float>(msg.payload)); }, true);
+
+    requestMessage("You're Stored", [this](const Kunlaboro::Message& msg) { setContainer(static_cast<SpatialContainer*>(msg.sender)); }, true);
+}
+
+Inertia::Inertia() : Kunlaboro::Component("Components.Inertia"), mPhysical(NULL), mInertia(0,0)
+{
+}
+
+void Inertia::addedToEntity()
+{
+    requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg){ mPhysical = static_cast<Physical*>(msg.sender); });
+
+    requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
+        mPhysical->setPos(mPhysical->getPos() + mInertia * boost::any_cast<float>(msg.payload));
+    });
 }
 
 TexturedDrawable::TexturedDrawable() : Kunlaboro::Component("Components.TexturedDrawable")
@@ -116,10 +131,10 @@ SpatialContainer::~SpatialContainer()
 void SpatialContainer::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->update(boost::any_cast<float>(msg.payload)); });
-    requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
-    changeRequestPriority("LD26.Draw", -1);
+    /*requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
+    changeRequestPriority("LD26.Draw", -1);*/
 
-    requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->addObject(msg.sender->getOwnerId()); msg.handled = true; }, true);
+    requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ addEntity(msg.sender->getOwnerId()); msg.handled = true; }, true);
     requestMessage("GetObjects", [this](Kunlaboro::Message& msg) { if (mImpl == NULL) return; msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload)); msg.handled = true; });
 }
 
@@ -134,7 +149,11 @@ void SpatialContainer::setImpl(Impl* impl)
 void SpatialContainer::addEntity(Kunlaboro::EntityId eid)
 {
     if (mImpl != NULL)
+    {
         mImpl->addObject(eid);
+
+        sendMessageToEntity(eid, "You're Stored");
+    }
 }
 
 QuadTree::QuadTree(SpatialContainer& cont, sf::FloatRect bounds, int level, int max, QuadTree* qt):
@@ -162,7 +181,7 @@ QuadTree::~QuadTree()
     delete mSE;
 }
 
-void QuadTree::setBounds(sf::FloatRect bounds)
+void QuadTree::setBounds(const sf::FloatRect& bounds)
 {
     mBounds = bounds;
 
@@ -181,30 +200,31 @@ sf::FloatRect QuadTree::getBounds()
     return mBounds;
 }
 
-void QuadTree::addObject(Kunlaboro::EntityId eid)
+void QuadTree::addObject(Kunlaboro::EntityId eid, Physical* inp)
 {
     if (mLevel == mMaxLevel)
     {
-        mContained[eid] = NULL;
+        mContained[eid] = inp;
         return;
     }
 
-    sf::Vector2f pos = getPosition(eid);
+    Physical* phys = inp;
+    sf::Vector2f pos = getPosition(eid, &phys);
 
     if (contains(mNW, pos))
-        mNW->addObject(eid);
+        mNW->addObject(eid, phys);
     else if (contains(mNE, pos))
-        mNE->addObject(eid);
+        mNE->addObject(eid, phys);
     else if (contains(mSW, pos))
-        mSW->addObject(eid);
+        mSW->addObject(eid, phys);
     else if (contains(mSE, pos))
-        mSE->addObject(eid);
+        mSE->addObject(eid, phys);
     else if (contains(this, pos))
-        mContained[eid] = NULL;
+        mContained[eid] = phys;
     else if (mParent != NULL)
-        mParent->addObject(eid);
+        mParent->addObject(eid, phys);
 }
-std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(sf::Vector2f pos)
+std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos)
 {
     std::vector<Kunlaboro::EntityId> tmp;
 
@@ -275,7 +295,7 @@ void QuadTree::update(float dt)
             {
                 if (!contains(this, getPosition(it->first)))
                 {
-                    mParent->addObject(it->first);
+                    mParent->addObject(it->first, it->second);
 
                     if (mContained.count(it->first) > 0)
                         mContained.erase(it++);
@@ -319,7 +339,7 @@ void QuadTree::draw(sf::RenderTarget& target)
     }
 }
 
-sf::Vector2f QuadTree::getPosition(Kunlaboro::EntityId eid, bool store)
+sf::Vector2f QuadTree::getPosition(Kunlaboro::EntityId eid, Physical** store)
 {
     Kunlaboro::Message message(Kunlaboro::Type_Message, &mContainer);
     Kunlaboro::EntitySystem& system = *mContainer.getEntitySystem();
@@ -327,23 +347,17 @@ sf::Vector2f QuadTree::getPosition(Kunlaboro::EntityId eid, bool store)
     sf::Vector2f pos;
     if (store)
     {
-        auto& it = mContained[eid];
-        if (it == NULL)
+        if (*store == NULL)
         {
             system.sendLocalMessage(eid, system.getMessageRequestId(Kunlaboro::Reason_Message, "GetPos"), message);
             if (message.handled)
             {
-                if (store)
-                    it = static_cast<Physical*>(message.sender);
+                *store = static_cast<Physical*>(message.sender);
                 pos = boost::any_cast<sf::Vector2f>(message.payload);
             }
-            else if (store)
-            {
-                mContained.erase(eid);
-            }   
         }
         else
-        pos = it->getPos();
+            pos = (*store)->getPos();
     }
     else
     {

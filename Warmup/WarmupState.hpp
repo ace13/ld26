@@ -16,4 +16,7 @@ public:
 
 private:
     Kunlaboro::EntityId mWorldID;
+
+    std::vector<sf::Vertex> mStars;
+    std::vector<sf::Vertex> mBigStars;
 };

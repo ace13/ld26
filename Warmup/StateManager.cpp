@@ -2,7 +2,7 @@
 #include "InputManager.hpp"
 #include "SettingsManager.hpp"
 
-StateManager::StateManager()
+StateManager::StateManager() : mInput(NULL), mSettings(NULL), mGameView(NULL), mUiView(NULL)
 {
     mRUpdate = mSystem.getMessageRequestId(Kunlaboro::Reason_Message, "LD26.Update");
     mRDraw   = mSystem.getMessageRequestId(Kunlaboro::Reason_Message, "LD26.Draw"  );
@@ -17,6 +17,11 @@ StateManager::~StateManager()
 {
 }
 
+void StateManager::setViews(sf::View& game, sf::View& ui)
+{
+    mGameView = &game;
+    mUiView = &ui;
+}
 void StateManager::setInput(InputManager& in)
 {
     mInput = &in;
@@ -54,6 +59,10 @@ void IState::addedToEntity()
     requestMessage("LD26.Draw",   &IState::draw);
     requestMessage("LD26.DrawUi", &IState::drawUi);
 
+    changeRequestPriority("LD26.Update", -10);
+    changeRequestPriority("LD26.Draw",   -10);
+    changeRequestPriority("LD26.DrawUi", -10);
+
     setup();
 }
 
@@ -64,4 +73,6 @@ void StateManager::Internals::addedToEntity()
 
     requestMessage("Get.Input",    [man](Kunlaboro::Message& msg){ msg.payload = man->mInput; msg.handled = true;    });
     requestMessage("Get.Settings", [man](Kunlaboro::Message& msg){ msg.payload = man->mSettings; msg.handled = true; });
+    requestMessage("Get.GameView", [man](Kunlaboro::Message& msg){ msg.payload = man->mGameView; msg.handled = true; });
+    requestMessage("Get.UiView",   [man](Kunlaboro::Message& msg){ msg.payload = man->mUiView; msg.handled = true;   });
 }

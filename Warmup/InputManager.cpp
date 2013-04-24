@@ -2,6 +2,8 @@
 #include <SFML/Window/Event.hpp>
 #include <cmath>
 
+static const float BIND_THRESHOLD = 0.95f;
+
 InputManager::InputManager()
 {
 }
@@ -14,14 +16,17 @@ InputManager::~InputManager()
 void InputManager::startBind(const std::string& bind)
 {
     if (mInputs.count(bind) > 0)
+    {
         mCurrentlyBinding = bind;
+        mInputs[mCurrentlyBinding].Bind = Input::Bind_None;
+    }
 }
 
 void InputManager::addBind(const std::string& name, const sf::Event& bind)
 {
     Input found = parseInput(bind);
 
-    if (found.Bind != Input::Bind_None && found.Value > 0.75f)
+    if (found.Bind != Input::Bind_None && found.Value > BIND_THRESHOLD)
     {
         found.Value = 0;
         mInputs[name] = found;
@@ -34,28 +39,46 @@ void InputManager::handleEvent(const sf::Event& ev)
 
     if (found.Bind != Input::Bind_None)
     {
-        if (!mCurrentlyBinding.empty() && found.Value > 0.75f)
+        if (!mCurrentlyBinding.empty() && found.Value > BIND_THRESHOLD && mInputs[mCurrentlyBinding].Bind == Input::Bind_None)
+        {
             mInputs[mCurrentlyBinding] = found;
-        else if (mCurrentlyBinding.empty())
-            for (auto it = mInputs.begin(), end = mInputs.end(); it != end; ++it)
-            {
-                if (it->second.Bind != found.Bind)
-                    continue;
+        }
 
-                bool equal = false;
-                switch(it->second.Bind)
-                {
-                case Input::Bind_Key:
-                    equal = found.Key.Alt == it->second.Key.Alt &&
-                            found.Key.Ctrl == it->second.Key.Ctrl &&
-                            found.Key.Shift == it->second.Key.Shift &&
-                            found.Key.Key == it->second.Key.Key;
-                    break;
-                }
-                
-                if (equal)
-                    it->second.Value = found.Value;
+        for (auto it = mInputs.begin(), end = mInputs.end(); it != end; ++it)
+        {
+            if (it->second.Bind != found.Bind)
+                continue;
+
+            bool equal = false;
+            switch(it->second.Bind)
+            {
+            case Input::Bind_Key:
+                equal = found.Key.Alt == it->second.Key.Alt &&
+                        found.Key.Ctrl == it->second.Key.Ctrl &&
+                        found.Key.Shift == it->second.Key.Shift &&
+                        found.Key.Key == it->second.Key.Key;
+                break;
+            case Input::Bind_Axis:
+                equal = found.Axis.Joystick == it->second.Axis.Joystick &&
+                        found.Axis.Axis == it->second.Axis.Axis;
+                break;
+            case Input::Bind_Button:
+                equal = found.Button.Joystick == it->second.Button.Joystick &&
+                        found.Button.Button == it->second.Button.Button;
+                break;
             }
+                
+            if (equal)
+            {
+                if (it->second.Bind == Input::Bind_Axis && it->second.Axis.Positive != found.Axis.Positive)
+                    it->second.Value = 0;
+                else
+                    it->second.Value = found.Value;
+
+                if (it->first == mCurrentlyBinding && it->second.Value < BIND_THRESHOLD/2)
+                    mCurrentlyBinding.clear();
+            }
+        }
     }
 }
 

@@ -17,7 +17,7 @@ void GameState::setup()
     Kunlaboro::EntitySystem& sys = *getEntitySystem();
     mWorldID = sys.createEntity();
     Components::SpatialContainer* cont = static_cast<Components::SpatialContainer*>(sys.createComponent("Components.SpatialContainer"));
-    cont->setImpl(new Components::QuadTree(*cont, sf::FloatRect(0,0,2000,2000), 0, 4));
+    cont->setImpl(new Components::QuadTree(*cont, sf::FloatRect(0,0,16000,16000), 0, 4));
     sys.addComponent(mWorldID, cont);
     sys.finalizeEntity(mWorldID);
 
@@ -47,12 +47,33 @@ void GameState::setup()
         shape->setShape(conv);
     }
     sys.addComponent(id, shape);
-
-    
+    sys.addComponent(id, "Components.Inertia");
 
     sys.finalizeEntity(id);
 
     cont->addEntity(id);
+
+    mStars.resize(3200);
+    for (int i = 0; i < mStars.size(); ++i)
+    {
+        sf::Vector2f pos(rand()%16000, rand()%16000);
+        mStars[i].position = pos;
+        mStars[i].color = sf::Color::White;
+    }
+
+    mBigStars.resize(1600);
+    for (int i = 0; i < mBigStars.size()/4; i+=4)
+    {
+        sf::Vector2f pos(rand()%16000, rand()%16000);
+        mBigStars[i].position = pos;
+        mBigStars[i].color = sf::Color::White;
+        mBigStars[i+1].position = pos + sf::Vector2f(8, 0);
+        mBigStars[i+1].color = sf::Color::Yellow;
+        mBigStars[i+2].position = pos + sf::Vector2f(8, 8);
+        mBigStars[i+2].color = sf::Color::White;
+        mBigStars[i+3].position = pos + sf::Vector2f(0, 8);
+        mBigStars[i+3].color = sf::Color::Yellow;
+    }
 }
 
 void GameState::update(float dt)
@@ -61,15 +82,18 @@ void GameState::update(float dt)
 
 void GameState::draw(sf::RenderTarget& target)
 {
+    target.draw(&mStars.front(), mStars.size(), sf::Points);
+    target.draw(&mBigStars.front(), mBigStars.size(), sf::Quads);
 
+    // Draw Stars here
 }
 
 void GameState::drawUi(sf::RenderTarget& target)
 {
-    sf::Vector2f size = target.getView().getSize();
-    sf::RectangleShape shape(sf::Vector2f(size.x, 128));
+    /*sf::Vector2f size = target.getView().getSize();
+    sf::RectangleShape shape(sf::Vector2f(size.x, 32));
 
     shape.setFillColor(sf::Color(255, 255, 255, 200));
 
-    target.draw(shape);
+    target.draw(shape);*/
 }

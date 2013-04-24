@@ -5,7 +5,10 @@
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
+#include <iostream>
 #include <list>
+
+static const int MAX_BINDS = 3;
 
 MainClass::MainClass(int argc, char** argv)
 {
@@ -20,7 +23,7 @@ MainClass::MainClass(int argc, char** argv)
         ev.type = sf::Event::KeyPressed;
         ev.key.code = sf::Keyboard::W;
         ev.key.alt = ev.key.control = ev.key.shift = false;
-
+        
         mInput.addBind("Forward", ev);
 
         ev.key.code = sf::Keyboard::A;
@@ -30,6 +33,10 @@ MainClass::MainClass(int argc, char** argv)
         ev.key.code = sf::Keyboard::D;
 
         mInput.addBind("Right", ev);
+
+        ev.key.code = sf::Keyboard::LControl;
+
+        mInput.addBind("Fire", ev);
     }
 
     mManager.setInput(mInput);
@@ -38,6 +45,7 @@ MainClass::MainClass(int argc, char** argv)
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
     sys.registerComponent<Components::Physical>("Components.Physical");
+    sys.registerComponent<Components::Inertia>("Components.Inertia");
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
     sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
@@ -52,6 +60,8 @@ MainClass::~MainClass()
 
 int MainClass::operator()()
 {
+    int currentBind = (mSettings.getBool("Bind") ? 0 : 10);
+
     sf::RenderWindow app;
 
     if (mSettings.getBool("Fullscreen"))
@@ -81,6 +91,8 @@ int MainClass::operator()()
         mUi.setCenter(tSize/2.f);
     }
 
+    mManager.setViews(mGame, mUi);
+
     while (app.isOpen())
     {
         float dt = clock.restart().asSeconds();
@@ -104,19 +116,49 @@ int MainClass::operator()()
             }
         }
 
-        mManager.update(dt);
+        if (currentBind <= MAX_BINDS && !mInput.isBinding())
+        {
+            if (currentBind < MAX_BINDS)
+                std::cout << "Press a key/button/axis you want to bind to ";
 
-        app.clear();
+            std::string bind;
+            switch(currentBind)
+            {
+            case 0:
+                bind = "Forward"; break;
+            case 1:
+                bind = "Left"; break;
+            case 2:
+                bind = "Right"; break;
+                break;
+            }
 
-        app.setView(mGame);
-        mManager.draw(app);
-        mGame = app.getView();
+            if (bind.empty())
+            {
+                currentBind++;
+                continue;
+            }
 
-        app.setView(mUi);
-        mManager.drawUi(app);
-        mUi = app.getView();
+            std::cout << bind << std::endl;
 
-        app.display();
+            mInput.startBind(bind);
+
+            currentBind++;
+        }
+        else if (currentBind > MAX_BINDS)
+        {
+            mManager.update(dt);
+
+            app.clear();
+
+            app.setView(mGame);
+            mManager.draw(app);
+
+            app.setView(mUi);
+            mManager.drawUi(app);
+
+            app.display();
+        }
     }
 
     return 0;
