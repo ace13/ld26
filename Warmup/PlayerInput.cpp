@@ -1,10 +1,13 @@
 #include "PlayerInput.hpp"
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <Kunlaboro/EntitySystem.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
 const float rad = 3.14159f/180.f;
 
-PlayerInput::PlayerInput() : Kunlaboro::Component("PlayerInput"), mPhysical(NULL), mInertial(NULL), mInput(NULL), mAcc(0), mView(NULL)
+PlayerInput::PlayerInput() : Kunlaboro::Component("PlayerInput"), mPhysical(NULL), mInertial(NULL), mInput(NULL), mAcc(0), mView(NULL), mFired(false)
 {
 }
 
@@ -107,6 +110,33 @@ void PlayerInput::update(float dt)
     mPhysical->setRot(rot);
 
     mView->setCenter(pos);
+
+    bool fire = mInput->getInput("Fire") > 0.5f;
+    if (fire && !mFired)
+    {
+        sf::Vector2f fireAng = sf::Vector2f(std::cosf(rot*rad), std::sinf(rot*rad));
+        sf::Vector2f firePos = pos + fireAng * 64.f;
+        sf::Vector2f fireSpeed = inertia + fireAng * 256.f;
+
+        Kunlaboro::EntitySystem& sys = *getEntitySystem();
+
+        Kunlaboro::EntityId shot = sys.createEntity();
+        sys.addComponent(shot, "Components.Physical");
+        sys.addComponent(shot, "Components.Inertia");
+        // sys.addComponent(shot, "PlayerInput");
+        Components::ShapeDrawable* shape = static_cast<Components::ShapeDrawable*>(sys.createComponent("Components.ShapeDrawable"));
+        shape->setShape(new sf::CircleShape(8.f)); // sf::RectangleShape(sf::Vector2f(32, 16))
+        sys.addComponent(shot, shape);
+        sys.finalizeEntity(shot);
+
+        sendMessageToEntity(shot, "SetPos", firePos);
+        sendMessageToEntity(shot, "SetRotSpeed", (float)(rand()%360-180));
+        sendMessageToEntity(shot, "SetSpeed", fireSpeed);
+
+        mFired = true;
+    }
+    else if (!fire && mFired)
+        mFired = false;
 }
 
 void PlayerInput::draw(sf::RenderTarget& target)

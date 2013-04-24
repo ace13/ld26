@@ -23,7 +23,7 @@ void Physical::addedToEntity()
     requestMessage("You're Stored", [this](const Kunlaboro::Message& msg) { setContainer(static_cast<SpatialContainer*>(msg.sender)); }, true);
 }
 
-Inertia::Inertia() : Kunlaboro::Component("Components.Inertia"), mPhysical(NULL), mInertia(0,0)
+Inertia::Inertia() : Kunlaboro::Component("Components.Inertia"), mPhysical(NULL), mInertia(0,0), mRotSpeed(0)
 {
 }
 
@@ -31,8 +31,18 @@ void Inertia::addedToEntity()
 {
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg){ mPhysical = static_cast<Physical*>(msg.sender); });
 
+    requestMessage("SetSpeed",    [this](const Kunlaboro::Message& msg) {
+        setSpeed(boost::any_cast<sf::Vector2f>(msg.payload));
+    }, true);
+    requestMessage("SetRotSpeed", [this](const Kunlaboro::Message& msg) {
+        setRotSpeed(boost::any_cast<float>(msg.payload));
+    }, true);
+
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
-        mPhysical->setPos(mPhysical->getPos() + mInertia * boost::any_cast<float>(msg.payload));
+        float dt = boost::any_cast<float>(msg.payload);
+
+        mPhysical->setPos(mPhysical->getPos() + mInertia * dt);
+        mPhysical->setRot(mPhysical->getRot() + mRotSpeed * dt);
     });
 }
 

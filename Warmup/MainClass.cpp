@@ -34,7 +34,7 @@ MainClass::MainClass(int argc, char** argv)
 
         mInput.addBind("Right", ev);
 
-        ev.key.code = sf::Keyboard::LControl;
+        ev.key.code = sf::Keyboard::Space;
 
         mInput.addBind("Fire", ev);
     }

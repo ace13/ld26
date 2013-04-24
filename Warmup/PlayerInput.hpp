@@ -21,5 +21,6 @@ private:
     Components::Inertia*  mInertial;
     InputManager* mInput;
     float mAcc;
+    bool mFired;
     sf::View* mView;
 };

@@ -42,11 +42,14 @@ public:
     void addedToEntity();
 
     inline sf::Vector2f getSpeed() const { return mInertia; }
-    void setSpeed(const sf::Vector2f& in) { mInertia = in; }
+    inline void setSpeed(const sf::Vector2f& in) { mInertia = in; }
+    inline float getRotSpeed() const { return mRotSpeed; }
+    inline void setRotSpeed(float s) { mRotSpeed = s; }
 
 private:
     Physical* mPhysical;
     sf::Vector2f mInertia;
+    float mRotSpeed;
 };
 
 class TexturedDrawable : public Kunlaboro::Component
