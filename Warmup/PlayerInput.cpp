@@ -25,6 +25,31 @@ void PlayerInput::addedToEntity()
         draw(*boost::any_cast<sf::RenderTarget*>(msg.payload));
     });
 
+    requestMessage("Collision", [this](const Kunlaboro::Message& msg) {
+        Components::Physical* other = static_cast<Components::Physical*>(msg.sender);
+        if (other == NULL)
+            return;
+
+        sf::Vector2f diff = (other->getPos() - mPhysical->getPos());
+        float len = diff.x*diff.x + diff.y*diff.y;
+        diff /= sqrt(len);
+
+        sf::Vector2f speed;
+        Kunlaboro::Message msg2 = sendQuestionToEntity(other->getOwnerId(), "GetSpeed");
+        if (!msg2.handled)
+            return;
+        speed = boost::any_cast<sf::Vector2f>(msg2.payload);
+        sf::Vector2f mySpeed = mInertial->getSpeed();
+        sf::Vector2f sdiff = mySpeed - speed;
+        float speedLen = sdiff.x*sdiff.x + sdiff.y*sdiff.y;
+        
+
+        diff *= sqrt(speedLen);
+
+        sendMessageToEntity(other->getOwnerId(), "SetSpeed", diff);
+
+    }, true);
+
     changeRequestPriority("LD26.Draw", -1);
 
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) {
@@ -128,8 +153,11 @@ void PlayerInput::update(float dt)
         shape->setShape(new sf::CircleShape(8.f)); // sf::RectangleShape(sf::Vector2f(32, 16))
         sys.addComponent(shot, shape);
         sys.finalizeEntity(shot);
+        
+        mPhysical->getContainer()->addEntity(shot);
 
         sendMessageToEntity(shot, "SetPos", firePos);
+        sendMessageToEntity(shot, "SetRadius", 8.f);
         sendMessageToEntity(shot, "SetRotSpeed", (float)(rand()%360-180));
         sendMessageToEntity(shot, "SetSpeed", fireSpeed);
 

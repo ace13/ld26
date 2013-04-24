@@ -21,6 +21,42 @@ void Physical::addedToEntity()
     requestMessage("SetRadius", [this](const Kunlaboro::Message& msg){ setRadius(boost::any_cast<float>(msg.payload)); }, true);
 
     requestMessage("You're Stored", [this](const Kunlaboro::Message& msg) { setContainer(static_cast<SpatialContainer*>(msg.sender)); }, true);
+
+    requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
+        if (!hasContainer())
+            return;
+
+        std::vector<Kunlaboro::EntityId> ents = mContainer->getObjectsAt(getPos());
+        for (int i = 0; i < ents.size(); ++i)
+        {
+            if (ents[i] == getOwnerId())
+                continue;
+
+            sf::Vector2f otherPos;
+            float otherRadius;
+
+            Kunlaboro::Message msg = sendQuestionToEntity(ents[i], "GetPos");
+            if (!msg.handled)
+                continue;
+
+            otherPos = boost::any_cast<sf::Vector2f>(msg.payload);
+
+            msg = sendQuestionToEntity(ents[i], "GetRadius");
+            if (!msg.handled)
+                continue;
+
+            otherRadius = boost::any_cast<float>(msg.payload);
+
+            sf::Vector2f diff = (getPos() - otherPos);
+            float dist = diff.x * diff.x + diff.y * diff.y;
+            float radiuses = mRadius*mRadius + otherRadius*otherRadius;
+
+            if (dist < radiuses)
+            {
+                sendMessageToEntity(ents[i], "Collision");
+            }
+        }
+    });
 }
 
 Inertia::Inertia() : Kunlaboro::Component("Components.Inertia"), mPhysical(NULL), mInertia(0,0), mRotSpeed(0)
@@ -31,6 +67,9 @@ void Inertia::addedToEntity()
 {
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg){ mPhysical = static_cast<Physical*>(msg.sender); });
 
+    requestMessage("GetSpeed",    [this](Kunlaboro::Message& msg) {
+        msg.payload = getSpeed(); msg.handled = true;
+    }, true);
     requestMessage("SetSpeed",    [this](const Kunlaboro::Message& msg) {
         setSpeed(boost::any_cast<sf::Vector2f>(msg.payload));
     }, true);

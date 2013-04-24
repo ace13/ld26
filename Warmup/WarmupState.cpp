@@ -27,7 +27,7 @@ void GameState::setup()
 
     Components::Physical* phys = static_cast<Components::Physical*>(sys.createComponent("Components.Physical"));
     phys->setPos(sf::Vector2f(888, 189));
-    phys->setRadius(10);
+    phys->setRadius(64);
     phys->setRot(0);
     sys.addComponent(id, phys);
     
