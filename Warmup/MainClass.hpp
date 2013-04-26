@@ -1,6 +1,7 @@
 #include "StateManager.hpp"
 #include "InputManager.hpp"
 #include "SettingsManager.hpp"
+#include <SFML/Graphics/View.hpp>
 
 #pragma once
 
@@ -13,6 +14,7 @@ public:
     int operator()();
 
 private:
+    sf::View mGame, mUi;
     SettingsManager mSettings;
     StateManager mManager;
     InputManager mInput;

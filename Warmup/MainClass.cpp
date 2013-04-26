@@ -8,7 +8,7 @@
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 3;
+static const int MAX_BINDS = 4;
 
 MainClass::MainClass(int argc, char** argv)
 {
@@ -41,6 +41,7 @@ MainClass::MainClass(int argc, char** argv)
 
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
+    mManager.setViews(mGame, mUi);
 
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
@@ -81,7 +82,8 @@ int MainClass::operator()()
         sys.finalizeEntity(id);
     }
 
-    sf::View mGame, mUi = app.getDefaultView();
+    mGame = app.getDefaultView();
+    mUi = app.getDefaultView();
     {
         float aspect = (float)app.getSize().x/(float)app.getSize().y;
         mGame.setSize(1080*aspect,1080);
@@ -90,8 +92,6 @@ int MainClass::operator()()
         mUi.setSize(tSize);
         mUi.setCenter(tSize/2.f);
     }
-
-    mManager.setViews(mGame, mUi);
 
     while (app.isOpen())
     {
@@ -130,7 +130,8 @@ int MainClass::operator()()
                 bind = "Left"; break;
             case 2:
                 bind = "Right"; break;
-                break;
+            case 3:
+                bind = "Fire"; break;
             }
 
             if (bind.empty())

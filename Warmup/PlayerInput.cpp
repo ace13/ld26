@@ -29,7 +29,7 @@ void PlayerInput::addedToEntity()
         Components::Physical* other = static_cast<Components::Physical*>(msg.sender);
         if (other == NULL)
             return;
-
+        /*
         sf::Vector2f diff = (other->getPos() - mPhysical->getPos());
         float len = diff.x*diff.x + diff.y*diff.y;
         diff /= sqrt(len);
@@ -47,7 +47,7 @@ void PlayerInput::addedToEntity()
         diff *= sqrt(speedLen);
 
         sendMessageToEntity(other->getOwnerId(), "SetSpeed", diff);
-
+        */
     }, true);
 
     changeRequestPriority("LD26.Draw", -1);
@@ -140,7 +140,7 @@ void PlayerInput::update(float dt)
     if (fire && !mFired)
     {
         sf::Vector2f fireAng = sf::Vector2f(std::cosf(rot*rad), std::sinf(rot*rad));
-        sf::Vector2f firePos = pos + fireAng * 64.f;
+        sf::Vector2f firePos = pos + fireAng * 68.f;
         sf::Vector2f fireSpeed = inertia + fireAng * 256.f;
 
         Kunlaboro::EntitySystem& sys = *getEntitySystem();
