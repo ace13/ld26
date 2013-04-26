@@ -1,30 +1,24 @@
-SET(Warmup_Headers
+SET(Game_Headers
+	Components.hpp
 	MenuState.hpp
 	InputManager.hpp
 	MainClass.hpp
 	SettingsManager.hpp
 	StateManager.hpp
-
-	PlayerInput.hpp
-	WarmupState.hpp
-	Components.hpp
 )
 
-SET(Warmup_Source
+SET(Game_Source
 	Main.cpp
 
+	Components.cpp
 	MenuState.cpp
 	InputManager.cpp
 	MainClass.cpp
 	SettingsManager.cpp
 	StateManager.cpp
-
-	PlayerInput.cpp
-	WarmupState.cpp
-	Components.cpp
 )
 
-SET(Warmup_Code ${Warmup_Source} ${Warmup_Headers})
+SET(Game_Code ${Game_Source} ${Game_Headers})
 
 FIND_PACKAGE(SFML REQUIRED COMPONENTS system window graphics audio)
 FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
@@ -40,15 +34,15 @@ LINK_DIRECTORIES(
 	${Boost_LIBRARY_DIRS}
 )
 
-ADD_EXECUTABLE(LD26_Warmup ${Warmup_Code})
+ADD_EXECUTABLE(LD26_Game ${Game_Code})
 
-TARGET_LINK_LIBRARIES(LD26_Warmup
+TARGET_LINK_LIBRARIES(LD26_Game
 	Kunlaboro
 	${SFML_LIBRARIES}
 )
 
 if (NOT WIN32)
-	TARGET_LINK_LIBRARIES(LD26_Warmup
+	TARGET_LINK_LIBRARIES(LD26_Game
 		${Boost_LIBRARIES}
 	)
 endif()

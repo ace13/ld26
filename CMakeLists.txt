@@ -15,6 +15,6 @@ ENDIF()
 add_definitions(-DUNICODE -D_UNICODE)
 
 ADD_SUBDIRECTORY(Kunlaboro)
-ADD_SUBDIRECTORY(Warmup)
+ADD_SUBDIRECTORY(Game)
 
 SET(Kunlaboro_BOOST ON CACHE INTERNAL "Internal value" FORCE)

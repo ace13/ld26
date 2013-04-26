@@ -1,14 +1,12 @@
 #include "MainClass.hpp"
-#include "WarmupState.hpp"
 #include "Components.hpp"
-#include "PlayerInput.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 4;
+static const int MAX_BINDS = 1;
 
 MainClass::MainClass(int argc, char** argv)
 {
@@ -17,27 +15,6 @@ MainClass::MainClass(int argc, char** argv)
         stack.push_front(argv[i]);
 
     mSettings.handleArgs(stack);
-
-    {
-        sf::Event ev;
-        ev.type = sf::Event::KeyPressed;
-        ev.key.code = sf::Keyboard::W;
-        ev.key.alt = ev.key.control = ev.key.shift = false;
-        
-        mInput.addBind("Forward", ev);
-
-        ev.key.code = sf::Keyboard::A;
-
-        mInput.addBind("Left", ev);
-
-        ev.key.code = sf::Keyboard::D;
-
-        mInput.addBind("Right", ev);
-
-        ev.key.code = sf::Keyboard::Space;
-
-        mInput.addBind("Fire", ev);
-    }
 
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
@@ -50,8 +27,6 @@ MainClass::MainClass(int argc, char** argv)
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
     sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
-    sys.registerComponent<PlayerInput>("PlayerInput");
-    sys.registerComponent<GameState>("Warmup");
 }
 
 MainClass::~MainClass()
@@ -66,9 +41,9 @@ int MainClass::operator()()
     sf::RenderWindow app;
 
     if (mSettings.getBool("Fullscreen"))
-        app.create(sf::VideoMode::getDesktopMode(), "Ludumdare #26 Warmup", sf::Style::None);
+        app.create(sf::VideoMode::getDesktopMode(), "Ludumdare #26", sf::Style::None);
     else
-        app.create(sf::VideoMode(mSettings.getInt("Width"), mSettings.getInt("Height")), "Ludumdare #26 Warmup");
+        app.create(sf::VideoMode(mSettings.getInt("Width"), mSettings.getInt("Height")), "Ludumdare #26");
 
     app.setFramerateLimit(60);
     sf::Event ev;
@@ -78,7 +53,7 @@ int MainClass::operator()()
         Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
         Kunlaboro::EntityId id = sys.createEntity();
-        sys.addComponent(id, "Warmup");
+        //sys.addComponent(id, "Warmup");
         sys.finalizeEntity(id);
     }
 
@@ -125,13 +100,7 @@ int MainClass::operator()()
             switch(currentBind)
             {
             case 0:
-                bind = "Forward"; break;
-            case 1:
-                bind = "Left"; break;
-            case 2:
-                bind = "Right"; break;
-            case 3:
-                bind = "Fire"; break;
+                bind = ""; break;
             }
 
             if (bind.empty())
