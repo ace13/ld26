@@ -21,6 +21,7 @@ void GameState::setup()
     sys.finalizeEntity(mWorld);
 
     Kunlaboro::EntityId player = sys.createEntity();
+    sys.addComponent(player, "Components.MetaPhysical");
     sys.addComponent(player, "Components.Physical");
     sys.addComponent(player, "Components.Inertia");
     sys.addComponent(player, "Components.ShapeDrawable");
@@ -28,11 +29,12 @@ void GameState::setup()
     sys.addComponent(player, "PlayerController");
     sys.finalizeEntity(player);
 
-    sf::CircleShape* circ = new sf::CircleShape(12.f);
-
     for (int i = 0; i < 64; ++i)
     {
+        sf::CircleShape* circ = new sf::CircleShape(12.f);
+
         Kunlaboro::EntityId e = sys.createEntity();
+        sys.addComponent(e, "Components.MetaPhysical");
         sys.addComponent(e, "Components.Physical");
         sys.addComponent(e, "Components.Inertia");
         sys.addComponent(e, "Components.ShapeDrawable");
@@ -41,6 +43,8 @@ void GameState::setup()
         sys.finalizeEntity(e);
 
         sendMessageToEntity(e, "SetShape", (sf::Shape*)circ);
+        sendMessageToEntity(e, "SetOrigin");
+        sendMessageToEntity(e, "SetRadius", 12.f);
         sendMessageToEntity(e, "SetPos", sf::Vector2f(rand()%16000, rand()%16000));
 
         Kunlaboro::Message msg(Kunlaboro::Type_Message, sys.getAllComponentsOnEntity(e, "EnemyController")[0]);;

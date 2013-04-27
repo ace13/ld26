@@ -55,6 +55,8 @@ inline float slerp(float a, float b, float dt)
     return atan2(ret.Complex, ret.Real) * 2;
 };
 
+auto dot = [](const sf::Vector2f& a, const sf::Vector2f& b) -> float{ sf::Vector2f c = b-a; return ((c.x*c.x) + (c.y*c.y)); };
+
 static const float pi = 3.14159;
 static const float phi = 0.61803;
 

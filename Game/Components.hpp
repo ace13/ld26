@@ -10,6 +10,26 @@ namespace Components
  
 class SpatialContainer;
 
+class MetaPhysical : public Kunlaboro::Component
+{
+public:
+    MetaPhysical();
+
+    void addedToEntity();
+
+    inline float getHealth() const { return mHealth; }
+    inline float getMaxHealth() const { return mMaxHealth; }
+    inline float getRegen() const { return mRegen; }
+    inline void setHealth(float v) { mHealth = v; }
+    inline void setMaxHealth(float v) { mMaxHealth = v; }
+    inline void setRegen(float v) { mRegen = v; }
+
+private:
+    float mHealth;
+    float mMaxHealth;
+    float mRegen;
+};
+
 class Physical : public Kunlaboro::Component
 {
 public:
@@ -76,8 +96,12 @@ public:
 
     void setShape(sf::Shape*);
     sf::Shape* getShape() const;
+    inline void setOrigin() { setOrigin(getCenter()); }
+    void setOrigin(const sf::Vector2f&);
 
 private:
+    sf::Vector2f getCenter();
+
     Physical* mPhysical;
     sf::Shape* mShape;
 };

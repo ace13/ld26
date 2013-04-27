@@ -5,6 +5,7 @@
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <Kunlaboro/EntitySystem.hpp>
 #include <iostream>
 
 PlayerController::PlayerController(): Kunlaboro::Component("PlayerController"), mInput(NULL), mPhys(NULL), mInert(NULL), mView(NULL), mSize(0)
@@ -20,24 +21,52 @@ void PlayerController::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload)); });
     requestMessage("LD26.Draw",   [this](const Kunlaboro::Message& msg) { draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
+    changeRequestPriority("LD26.Draw", 1);
+
     requestMessage("Collision",   [this](const Kunlaboro::Message& msg)
     {
+         Components::Physical* other = static_cast<Components::Physical*>(msg.sender);
+         if (other == NULL)
+             return;
 
+         Kunlaboro::Message msg2 = sendQuestion("GetPoints");
+         const std::vector<std::pair<sf::Vector2f, float> >& points = *boost::any_cast<const std::vector<std::pair<sf::Vector2f, float> >*>(msg2.payload);
+         float ang = mPhys->getRot();
+         sf::Vector2f pos = mPhys->getPos();
+         sf::Vector2f X = sf::Vector2f(cos(ang), sin(ang));
+         sf::Vector2f Y = sf::Vector2f(cos(ang + pi/2), sin(ang + pi/2));
+
+         for (int i = 0; i < points.size(); ++i)
+         {
+             sf::Vector2f p = points[i].first;
+             float prot = dot(pos+(X*p.x + Y*p.y), other->getPos());
+
+             if (prot < other->getRadius()*other->getRadius())
+             {
+                 //getEntitySystem()->destroyEntity(other->getOwnerId());
+
+                 std::cerr << "TODO: Calculate damage" << std::endl;
+             }
+         }
     }, true);
 
-    requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) { mPhys = static_cast<Components::Physical*>(msg.sender); });
+    requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) { mPhys = static_cast<Components::Physical*>(msg.sender); mPhys->setRadius(31); });
     requireComponent("Components.Inertia",  [this](const Kunlaboro::Message& msg) { mInert = static_cast<Components::Inertia*>(msg.sender); });
+    requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg)
+    {
+        sf::ConvexShape* shape = new sf::ConvexShape(4);
+        shape->setPoint(0, sf::Vector2f( 25,  0));
+        shape->setPoint(1, sf::Vector2f(-25,  10));
+        shape->setPoint(2, sf::Vector2f(-25, -10));
+        shape->setPoint(3, sf::Vector2f( 25,  0));
 
-    sf::ConvexShape* shape = new sf::ConvexShape(4);
-    shape->setPoint(0, sf::Vector2f( 15,  0));
-    shape->setPoint(1, sf::Vector2f(-15,  10));
-    shape->setPoint(2, sf::Vector2f(-15, -10));
-    shape->setPoint(3, sf::Vector2f( 15,  0));
+        shape->setFillColor(sf::Color::Transparent);
+        shape->setOutlineColor(sf::Color::White);
+        shape->setOutlineThickness(2.5f);
 
-    shape->setFillColor(sf::Color::Transparent);
-    shape->setOutlineColor(sf::Color::White);
-    shape->setOutlineThickness(2.5f);
-    sendMessage("SetShape", (sf::Shape*)shape);
+        sendMessage("SetShape", (sf::Shape*)shape);
+        sendMessage("SetOrigin");
+    });
 
     if (mView == NULL)
     {
@@ -133,6 +162,7 @@ void PlayerController::draw(sf::RenderTarget& target)
     Kunlaboro::Message msg = sendGlobalQuestion("Get.Font");
     sf::Font& font = *boost::any_cast<sf::Font*>(msg.payload);
 
+    angs.setColor(sf::Color::Red);
     angs.setFont(font);
     angs.setCharacterSize(8);
 

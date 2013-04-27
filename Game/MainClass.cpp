@@ -28,6 +28,7 @@ MainClass::MainClass(int argc, char** argv)
 
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
+    sys.registerComponent<Components::MetaPhysical>("Components.MetaPhysical");
     sys.registerComponent<Components::Physical>("Components.Physical");
     sys.registerComponent<Components::Inertia>("Components.Inertia");
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");

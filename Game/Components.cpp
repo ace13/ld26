@@ -7,6 +7,33 @@
 
 using namespace Components;
 
+MetaPhysical::MetaPhysical() : Kunlaboro::Component("Components.MetaPhysical"), mHealth(1), mMaxHealth(1), mRegen(1)
+{
+}
+
+void MetaPhysical::addedToEntity()
+{
+    requestMessage("GetHealth",    [this](Kunlaboro::Message& msg){ msg.payload = getHealth(); msg.handled = true; }, true);
+    requestMessage("GetMaxHealth", [this](Kunlaboro::Message& msg){ msg.payload = getMaxHealth(); msg.handled = true; }, true);
+    requestMessage("GetRegen",     [this](Kunlaboro::Message& msg){ msg.payload = getRegen(); msg.handled = true; }, true);
+
+    requestMessage("SetHealth",    [this](const Kunlaboro::Message& msg){ setHealth(boost::any_cast<float>(msg.payload)); }, true);
+    requestMessage("SetMaxHealth",    [this](const Kunlaboro::Message& msg){ setMaxHealth(boost::any_cast<float>(msg.payload)); }, true);
+    requestMessage("SetRegen",    [this](const Kunlaboro::Message& msg){ setRegen(boost::any_cast<float>(msg.payload)); }, true);
+
+    requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg)
+    {
+        if (mHealth <= 0)
+            getEntitySystem()->destroyEntity(getOwnerId());
+        else
+        {
+            float dt = boost::any_cast<float>(msg.payload);
+
+            mHealth = std::max(mMaxHealth, mHealth + mRegen * dt);
+        }
+    });
+}
+
 Physical::Physical() : Kunlaboro::Component("Components.Physical"), mX(0), mY(0), mRot(0), mRadius(0), mContainer(NULL)
 {
 }
@@ -149,25 +176,42 @@ void ShapeDrawable::addedToEntity()
     requestMessage("SetShape", [this](const Kunlaboro::Message& msg){
         setShape(boost::any_cast<sf::Shape*>(msg.payload));
     }, true);
+    requestMessage("SetOrigin", [this](const Kunlaboro::Message& msg)
+    {
+        if (msg.payload.type() != typeid(sf::Vector2f))
+            setOrigin();
+        else
+            setOrigin(boost::any_cast<sf::Vector2f>(msg.payload));
+    }, true);
     requestMessage("LD26.Draw",  [this](const Kunlaboro::Message& msg) {
             if (mShape == NULL || mPhysical == NULL)
                 return;
 
             sf::RenderTarget& target = *boost::any_cast<sf::RenderTarget*>(msg.payload);
 
-            sf::Vector2f size;
-            {
-                sf::FloatRect rect = mShape->getLocalBounds();
-                size.x = rect.left + rect.width / 2.f;
-                size.y = rect.top + rect.height / 2.f;
-            }
-            mShape->setOrigin(size);
-
             mShape->setPosition(mPhysical->getPos());
             mShape->setRotation(mPhysical->getRot());
 
             target.draw(*mShape);
         });
+}
+
+void ShapeDrawable::setOrigin(const sf::Vector2f& origin)
+{
+    mShape->setOrigin(origin);
+}
+
+sf::Vector2f ShapeDrawable::getCenter()
+{
+    if (mShape == NULL)
+        return sf::Vector2f();
+
+    sf::Vector2f size;
+    sf::FloatRect rect = mShape->getLocalBounds();
+    size.x = rect.left + rect.width / 2.f;
+    size.y = rect.top + rect.height / 2.f;
+
+    return size;
 }
 
 SharpCorners::SharpCorners() : Kunlaboro::Component("Components.SharpCorners"), mShape(NULL), mModified(false)
@@ -216,8 +260,6 @@ void SharpCorners::addedToEntity()
                 }
 
                 sf::Vector2f A = shape->getPoint(i), B = shape->getPoint(j), C = shape->getPoint(k);
-
-                auto dot = [](const sf::Vector2f& a, const sf::Vector2f& b) -> float{ sf::Vector2f c = b-a; return ((c.x*c.x) + (c.y*c.y)); };
 
                 float ABdot = dot(A, B),
                       BCdot = dot(B, C),
