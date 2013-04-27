@@ -19,6 +19,7 @@ MainClass::MainClass(int argc, char** argv)
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
     mManager.setViews(mGame, mUi);
+    mManager.setTelemetry(mTelem);
 
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
@@ -47,7 +48,6 @@ int MainClass::operator()()
 
     app.setFramerateLimit(60);
     sf::Event ev;
-    sf::Clock clock;
 
     {
         Kunlaboro::EntitySystem& sys = mManager.getSystem();
@@ -70,7 +70,8 @@ int MainClass::operator()()
 
     while (app.isOpen())
     {
-        float dt = clock.restart().asSeconds();
+        mTelem.startFrame();
+        float dt = mTelem.getDT();
 
         while (app.pollEvent(ev))
         {
@@ -103,15 +104,12 @@ int MainClass::operator()()
                 bind = ""; break;
             }
 
-            if (bind.empty())
+            if (!bind.empty())
             {
-                currentBind++;
-                continue;
+                std::cout << bind << std::endl;
+
+                mInput.startBind(bind);
             }
-
-            std::cout << bind << std::endl;
-
-            mInput.startBind(bind);
 
             currentBind++;
         }
@@ -129,6 +127,8 @@ int MainClass::operator()()
 
             app.display();
         }
+
+        mTelem.endFrame();
     }
 
     return 0;

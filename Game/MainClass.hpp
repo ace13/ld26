@@ -1,6 +1,7 @@
 #include "StateManager.hpp"
 #include "InputManager.hpp"
 #include "SettingsManager.hpp"
+#include "Telemetry.hpp"
 #include <SFML/Graphics/View.hpp>
 
 #pragma once
@@ -18,4 +19,5 @@ private:
     SettingsManager mSettings;
     StateManager mManager;
     InputManager mInput;
+    Telemetry mTelem;
 };

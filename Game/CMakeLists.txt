@@ -5,6 +5,7 @@ SET(Game_Headers
 	MainClass.hpp
 	SettingsManager.hpp
 	StateManager.hpp
+	Telemetry.hpp
 )
 
 SET(Game_Source
@@ -16,6 +17,7 @@ SET(Game_Source
 	MainClass.cpp
 	SettingsManager.cpp
 	StateManager.cpp
+	Telemetry.cpp
 )
 
 SET(Game_Code ${Game_Source} ${Game_Headers})
