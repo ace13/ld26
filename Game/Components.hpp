@@ -51,6 +51,7 @@ public:
 
 private:
     float mX, mY, mRot, mRadius;
+    float mInvul;
     SpatialContainer* mContainer;
 };
 

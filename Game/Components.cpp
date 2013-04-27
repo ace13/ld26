@@ -34,7 +34,7 @@ void MetaPhysical::addedToEntity()
     });
 }
 
-Physical::Physical() : Kunlaboro::Component("Components.Physical"), mX(0), mY(0), mRot(0), mRadius(0), mContainer(NULL)
+Physical::Physical() : Kunlaboro::Component("Components.Physical"), mX(0), mY(0), mRot(0), mRadius(0), mInvul(0), mContainer(NULL)
 {
 }
 
@@ -51,7 +51,10 @@ void Physical::addedToEntity()
     requestMessage("You're Stored", [this](const Kunlaboro::Message& msg) { setContainer(static_cast<SpatialContainer*>(msg.sender)); }, true);
 
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
-        if (!hasContainer())
+        if (mInvul > 0)
+            mInvul = std::max(0.f, mInvul - boost::any_cast<float>(msg.payload));
+
+        if (!hasContainer() || mInvul > 0)
             return;
 
         std::vector<Kunlaboro::EntityId> ents = mContainer->getObjectsAt(getPos());
@@ -82,6 +85,9 @@ void Physical::addedToEntity()
             if (dist < radiuses)
             {
                 sendMessageToEntity(ents[i], "Collision");
+
+                mInvul = 0.75;
+                return;
             }
         }
     });

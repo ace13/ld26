@@ -53,7 +53,7 @@ void PlayerController::addedToEntity()
          }
     }, true);
     
-    requireComponent("Components.MetaPhysical", [this](const Kunlaboro::Message& msg) { mMeta = static_cast<Components::MetaPhysical*>(msg.sender); mMeta->setMaxHealth(100); });
+    requireComponent("Components.MetaPhysical", [this](const Kunlaboro::Message& msg) { mMeta = static_cast<Components::MetaPhysical*>(msg.sender); mMeta->setMaxHealth(10); mMeta->setHealth(10); });
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) { mPhys = static_cast<Components::Physical*>(msg.sender); mPhys->setRadius(31); });
     requireComponent("Components.Inertia",  [this](const Kunlaboro::Message& msg) { mInert = static_cast<Components::Inertia*>(msg.sender); });
     requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg)
@@ -130,11 +130,11 @@ void PlayerController::update(float dt)
 
     {
         float sLen = sqrt(curDot);
-        sLen = sLen / 240;
+        sLen = sLen / 360;
         
         float targt = (sLen + dt * 1.5f * (len - sLen));
 
-        mInert->setSpeed(targetVec * targt * 240.f);
+        mInert->setSpeed(targetVec * targt * 360.f);
     }
 
     if (pos.x < 32 || pos.x > 15968 || pos.y < 32 || pos.y > 15968)
@@ -148,7 +148,7 @@ void PlayerController::update(float dt)
     }
 
     {
-        mView->setCenter(pos + curSpeed / 2.f);
+        mView->setCenter(pos + curSpeed / 4.f);
 
         sf::Vector2f size = mView->getSize();
         float aspect = size.x/size.y;
