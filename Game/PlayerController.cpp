@@ -48,6 +48,8 @@ void PlayerController::addedToEntity()
              {
                  //getEntitySystem()->destroyEntity(other->getOwnerId());
 
+                 sendMessageToEntity(other->getOwnerId(), "SetHealth", 0.f);
+
                  std::cerr << "TODO: Calculate damage" << std::endl;
              }
          }
@@ -125,6 +127,7 @@ void PlayerController::update(float dt)
     targetVec.y = sin(curAng);
 
     sf::Vector2f curSpeed = mInert->getSpeed();
+    sendGlobalMessage("Background.Parallax", -curSpeed);
     float curDot = curSpeed.x * curSpeed.x + curSpeed.y * curSpeed.y;
     targetDot = targetVec.x * targetVec.x + targetVec.y * targetVec.y;
 
@@ -223,7 +226,7 @@ void PlayerController::draw(sf::RenderTarget& target)
     sprite.setOrigin(64,64);
     float scale = (mPhys->getRadius()*2) / mTexture.getSize().x;
     sprite.setScale(scale, scale);
-    sprite.setColor(sf::Color(255,255,255,125));
+    sprite.setColor(sf::Color(255,255,255,72));
 
     target.draw(sprite);
 

@@ -34,6 +34,10 @@ void StateManager::setSettings(SettingsManager& in)
 {
     mSettings = &in;
 }
+void StateManager::setSound(SoundManager& in)
+{
+    mSound = &in;
+}
 void StateManager::setTelemetry(Telemetry& in)
 {
     mTelem = &in;
@@ -43,7 +47,7 @@ Kunlaboro::EntitySystem& StateManager::getSystem() { return mSystem; }
 
 void StateManager::update(float dt)
 {
-    Kunlaboro::Message msg(Kunlaboro::Type_Message, NULL, dt);
+    Kunlaboro::Message msg(Kunlaboro::Type_Message, NULL, std::min(dt, 0.5f));
     mSystem.sendGlobalMessage(mRUpdate, msg);
 }
 void StateManager::draw(sf::RenderTarget& target)
@@ -103,6 +107,7 @@ void StateManager::Internals::addedToEntity()
 
     requestMessage("Get.Input",    [man](Kunlaboro::Message& msg){ msg.payload = man->mInput; msg.handled = true;    });
     requestMessage("Get.Settings", [man](Kunlaboro::Message& msg){ msg.payload = man->mSettings; msg.handled = true; });
+    requestMessage("Get.Sounds",   [man](Kunlaboro::Message& msg){ msg.payload = man->mSound; msg.handled = true;    });
     requestMessage("Get.Font",     [man](Kunlaboro::Message& msg){ msg.payload = &man->mGlobalFont; msg.handled = true; });
     requestMessage("Get.GameView", [man](Kunlaboro::Message& msg){ msg.payload = man->mGameView; msg.handled = true; });
     requestMessage("Get.UiView",   [man](Kunlaboro::Message& msg){ msg.payload = man->mUiView; msg.handled = true;   });

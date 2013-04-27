@@ -7,6 +7,7 @@ SET(Game_Headers
 	EnemyController.hpp
 	PlayerController.hpp
 	SettingsManager.hpp
+	SoundManager.hpp
 	StateManager.hpp
 	Telemetry.hpp
 
@@ -24,6 +25,7 @@ SET(Game_Source
 	EnemyController.cpp
 	PlayerController.cpp
 	SettingsManager.cpp
+	SoundManager.cpp
 	StateManager.cpp
 	Telemetry.cpp
 

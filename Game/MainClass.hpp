@@ -1,6 +1,7 @@
 #include "StateManager.hpp"
 #include "InputManager.hpp"
 #include "SettingsManager.hpp"
+#include "SoundManager.hpp"
 #include "Telemetry.hpp"
 #include <SFML/Graphics/View.hpp>
 
@@ -17,6 +18,7 @@ public:
 private:
     sf::View mGame, mUi;
     SettingsManager mSettings;
+    SoundManager mSounds;
     StateManager mManager;
     InputManager mInput;
     Telemetry mTelem;

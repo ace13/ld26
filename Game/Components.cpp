@@ -1,5 +1,6 @@
 #include "Components.hpp"
 #include "Math.hpp"
+#include "SoundManager.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -18,13 +19,20 @@ void MetaPhysical::addedToEntity()
     requestMessage("GetRegen",     [this](Kunlaboro::Message& msg){ msg.payload = getRegen(); msg.handled = true; }, true);
 
     requestMessage("SetHealth",    [this](const Kunlaboro::Message& msg){ setHealth(boost::any_cast<float>(msg.payload)); }, true);
-    requestMessage("SetMaxHealth",    [this](const Kunlaboro::Message& msg){ setMaxHealth(boost::any_cast<float>(msg.payload)); }, true);
-    requestMessage("SetRegen",    [this](const Kunlaboro::Message& msg){ setRegen(boost::any_cast<float>(msg.payload)); }, true);
+    requestMessage("SetMaxHealth", [this](const Kunlaboro::Message& msg){ setMaxHealth(boost::any_cast<float>(msg.payload)); }, true);
+    requestMessage("SetRegen",     [this](const Kunlaboro::Message& msg){ setRegen(boost::any_cast<float>(msg.payload)); }, true);
 
-    requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg)
+    requestMessage("LD26.Update",  [this](const Kunlaboro::Message& msg)
     {
         if (mHealth <= 0)
+        {
+            Kunlaboro::Message msg = sendGlobalQuestion("Get.Sounds");
+            Kunlaboro::Message pos = sendQuestion("GetPos");
+            if (msg.handled)
+                boost::any_cast<SoundManager*>(msg.payload)->playSound("pop.wav");//, pos.handled ? boost::any_cast<sf::Vector2f>(pos.payload) : sf::Vector2f());
+
             getEntitySystem()->destroyEntity(getOwnerId());
+        }
         else
         {
             float dt = boost::any_cast<float>(msg.payload);
@@ -57,10 +65,10 @@ void Physical::addedToEntity()
         if (!hasContainer() || mInvul > 0)
             return;
 
-        std::vector<Kunlaboro::EntityId> ents = mContainer->getObjectsAt(getPos());
+        std::vector<Kunlaboro::EntityId> ents = mContainer->getObjectsAt(getPos(), getRadius()*3);
         for (int i = 0; i < ents.size(); ++i)
         {
-            if (ents[i] == getOwnerId())
+            if (ents[i] == getOwnerId() || !getEntitySystem()->isValid(ents[i]))
                 continue;
 
             sf::Vector2f otherPos;
@@ -347,7 +355,13 @@ void SpatialContainer::addedToEntity()
     //changeRequestPriority("LD26.Draw", -10);
 
     requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ addEntity(msg.sender->getOwnerId()); msg.handled = true; }, true);
-    requestMessage("GetObjects", [this](Kunlaboro::Message& msg) { if (mImpl == NULL) return; msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload)); msg.handled = true; });
+    requestMessage("GetObjects", [this](Kunlaboro::Message& msg)
+    { 
+      if (mImpl == NULL) 
+         return;
+      msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload));
+      msg.handled = true;
+    }, true);
 }
 
 void SpatialContainer::setImpl(Impl* impl)
@@ -436,7 +450,7 @@ void QuadTree::addObject(Kunlaboro::EntityId eid, Physical* inp)
     else if (mParent != NULL)
         mParent->addObject(eid, phys);
 }
-std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos)
+std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos, float maxDist)
 {
     std::vector<Kunlaboro::EntityId> tmp;
 
@@ -448,25 +462,28 @@ std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos)
     
     if (mLevel != mMaxLevel)
     {
+        auto inRange = [this](float min, float max, float val, float maxDiff) -> bool { if (val + maxDiff > min && val - maxDiff < max) return true; return false; };
+        
         std::vector<Kunlaboro::EntityId> child;
-        if (pos.x > mBounds.left + mBounds.width / 2.f && pos.x < mBounds.left + mBounds.width)
+
+        if (inRange(mBounds.left + mBounds.width / 2.f, mBounds.left + mBounds.width, pos.x, maxDist))
         {
-            if (pos.y > mBounds.top + mBounds.height / 2.f && pos.y < mBounds.top + mBounds.height)
+            if (inRange(mBounds.top + mBounds.height / 2.f, mBounds.top + mBounds.height, pos.y, maxDist))
             {
                 child = mSE->getObjectsAt(pos);
             }
-            else if (pos.y > mBounds.top && pos.y <= mBounds.top + mBounds.height / 2.f)
+            if (inRange(mBounds.top, mBounds.top + mBounds.height / 2.f, pos.y, maxDist))
             {
                 child = mNE->getObjectsAt(pos);
             }
         }
-        else if (pos.x > mBounds.left && pos.x <= mBounds.left + mBounds.width / 2.f)
+        if (inRange(mBounds.left, mBounds.left + mBounds.width / 2.f, pos.x, maxDist))
         {
-            if (pos.y > mBounds.top + mBounds.height / 2.f && pos.y < mBounds.top + mBounds.height)
+            if (inRange(mBounds.top + mBounds.height / 2.f, mBounds.top + mBounds.height, pos.y, maxDist))
             {
                 child = mSW->getObjectsAt(pos);
             }
-            else if (pos.y > mBounds.top && pos.y <= mBounds.top + mBounds.height / 2.f)
+            if (inRange(mBounds.top, mBounds.top + mBounds.height / 2.f, pos.y, maxDist))
             {
                 child = mNW->getObjectsAt(pos);
             }
@@ -505,6 +522,12 @@ void QuadTree::update(float dt)
         if (!mContained.empty())
             for (auto it = mContained.begin(); it != mContained.end();)
             {
+                if (!mContainer.getEntitySystem()->isValid(it->first))
+                {
+                    mContained.erase(it++);
+                    continue;
+                }
+
                 if (!contains(this, getPosition(it->first)))
                 {
                     mParent->addObject(it->first, it->second);

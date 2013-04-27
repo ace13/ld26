@@ -23,6 +23,7 @@ MainClass::MainClass(int argc, char** argv)
 
     mManager.setInput(mInput);
     mManager.setSettings(mSettings);
+    mManager.setSound(mSounds);
     mManager.setViews(mGame, mUi);
     mManager.setTelemetry(mTelem);
 
@@ -154,6 +155,7 @@ int MainClass::operator()()
         else if (currentBind > MAX_BINDS)
         {
             mManager.update(dt);
+            mSounds.update(dt);
 
             app.clear();
 

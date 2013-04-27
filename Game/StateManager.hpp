@@ -8,6 +8,7 @@
 namespace sf { class RenderTarget; }
 class InputManager;
 class SettingsManager;
+class SoundManager;
 class Telemetry;
 
 class IState;
@@ -21,6 +22,7 @@ public:
     void setViews(sf::View& game, sf::View& ui);
     void setInput(InputManager&);
     void setSettings(SettingsManager&);
+    void setSound(SoundManager&);
     void setTelemetry(Telemetry&);
     InputManager* getInput();
     SettingsManager* getSettings();
@@ -48,6 +50,7 @@ private:
     Kunlaboro::EntitySystem mSystem;
     InputManager* mInput;
     SettingsManager* mSettings;
+    SoundManager* mSound;
     Telemetry* mTelem;
 
     sf::View* mGameView;
@@ -72,6 +75,7 @@ public:
 
     InputManager* getInput()       { Kunlaboro::Message msg = sendGlobalQuestion("Get.Input"); if (msg.handled) return boost::any_cast<InputManager*>(msg.payload); return NULL; }
     SettingsManager* getSettings() { Kunlaboro::Message msg = sendGlobalQuestion("Get.Settings"); if (msg.handled) return boost::any_cast<SettingsManager*>(msg.payload); return NULL; }
+    SoundManager* getSound()       { Kunlaboro::Message msg = sendGlobalQuestion("Get.Sound"); if (msg.handled) return boost::any_cast<SoundManager*>(msg.payload); return NULL; }
     sf::Font* getFont()            { Kunlaboro::Message msg = sendGlobalQuestion("Get.Font"); if (msg.handled) return boost::any_cast<sf::Font*>(msg.payload); return NULL; }
 
 private:

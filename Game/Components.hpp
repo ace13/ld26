@@ -135,7 +135,7 @@ public:
 
     inline sf::FloatRect getBounds() const { if (mImpl) return mImpl->getBounds(); }
     inline void setBounds(const sf::FloatRect& r) { if (mImpl) mImpl->setBounds(r); }
-    inline std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos) { if (mImpl) return mImpl->getObjectsAt(pos); return std::vector<Kunlaboro::EntityId>(); }
+    inline std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos, float dist = 0) { if (mImpl) return mImpl->getObjectsAt(pos, dist); return std::vector<Kunlaboro::EntityId>(); }
     inline void clear() { if (mImpl) mImpl->clear(); }
 
     class Impl
@@ -148,7 +148,7 @@ public:
         virtual sf::FloatRect getBounds() = 0;
 
         virtual void addObject(Kunlaboro::EntityId) = 0;
-        virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos) = 0;
+        virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos, float dist = 0) = 0;
         virtual void clear() = 0;
     };
 
@@ -170,7 +170,7 @@ public:
     virtual void update(float dt);
 
     virtual void addObject(Kunlaboro::EntityId eid) { addObject(eid, NULL); }
-    virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos);
+    virtual std::vector<Kunlaboro::EntityId> getObjectsAt(const sf::Vector2f& pos, float dist = 0);
     virtual void clear();
 
     virtual void draw(sf::RenderTarget&);

@@ -32,7 +32,7 @@ void GameState::setup()
     sys.addComponent(player, "PlayerController");
     sys.finalizeEntity(player);
 
-    for (int i = 0; i < 128; ++i)
+    for (int i = 0; i < 128+rand()%64; ++i)
     {
         sf::CircleShape* circ = new sf::CircleShape(32.f);
 
@@ -57,11 +57,13 @@ void GameState::setup()
     Kunlaboro::Message msg(Kunlaboro::Type_Message, sys.getAllComponentsOnEntity(player, "PlayerController")[0]);;
     sys.sendLocalMessage(mWorld, sys.getMessageRequestId(Kunlaboro::Reason_Message, "StoreMe"), msg);
 
-    for (int i = 0; i < 1200; ++i)
+    for (int i = 0; i < 1200+rand()%640; ++i)
     {
         Kunlaboro::EntityId e = sys.createEntity();
-        sys.addComponent(e, "Components.Physical");
-        sys.addComponent(e, "Components.Inertia");
+        Kunlaboro::Component* phys = sys.createComponent("Components.Physical");
+        Kunlaboro::Component* inert = sys.createComponent("Components.Inertia");
+        sys.addComponent(e, phys);
+        sys.addComponent(e, inert);
         sys.addComponent(e, "Components.ShapeDrawable");
         sys.finalizeEntity(e);
 
@@ -88,13 +90,33 @@ void GameState::setup()
         }
 
         shape->setFillColor(sf::Color::Transparent);
-        shape->setOutlineColor(sf::Color(255,255,255, 24));
-        shape->setOutlineThickness(18.f + rand()%24);
-
+        shape->setOutlineColor(sf::Color(200+rand()%56,200+rand()%56,200+rand()%56, 24));
+        float size = 1+(rand()%48)/2.f;
+        shape->setOutlineThickness(18.f + size);
+        
+        sendMessageToEntity(e, "SetRadius", size);
         sendMessageToEntity(e, "SetShape", shape);
         sendMessageToEntity(e, "SetOrigin");
         sendMessageToEntity(e, "SetPos", sf::Vector2f(rand()%16000, rand()%16000));
         sendMessageToEntity(e, "SetRotSpeed", (float)(90 - rand()%180)/45.f);
+        sendMessageToEntity(e, "SetSpeed", sf::Vector2f(4 - rand()%8, 4 - rand()%8) * 24.f / size);
+
+        phys->requestMessage("LD26.Update", [phys](const Kunlaboro::Message& msg)
+        {
+            Components::Physical& p = (Components::Physical&)*phys;
+
+            sf::Vector2f pos = p.getPos();
+            if (pos.x < -1000)
+                pos.x = 17000;
+            if (pos.x > 17000)
+                pos.x = -1000;
+            if (pos.y < -1000)
+                pos.y = 17000;
+            if (pos.y > 17000)
+                pos.y = -1000;
+
+            p.setPos(pos);
+        });
     }
 }
 void GameState::update(float dt)
