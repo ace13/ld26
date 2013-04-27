@@ -69,9 +69,9 @@ void StateManager::drawUi(sf::RenderTarget& target)
 
         char tmp[256];
 #ifdef WIN32
-        sprintf_s(tmp, "FPS: %6d (%.2f avg)\nDT:  %6.2f (%.2f avg)", mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
+        sprintf_s(tmp, "Components: %d, entities: %d.\nFPS: %-4d (%.2f avg)\nDT:  %-4.2f (%.2f avg)", mSystem.numCom(), mSystem.numEnt(), mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
 #else
-        sprintf(tmp, "FPS: %6d (%.2f avg)\nDT:  %6.2f (%.2f avg)", mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
+        sprintf(tmp, "Components: %d, entities: %d.\nFPS: %-4d (%.2f avg)\nDT:  %4-.2f (%.2f avg)", mSystem.numCom(), mSystem.numEnt(), mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
 #endif
         prof.setString(tmp);
     }

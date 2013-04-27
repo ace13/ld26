@@ -70,9 +70,9 @@ public:
     virtual void draw(sf::RenderTarget& target) = 0;
     virtual void drawUi(sf::RenderTarget& target) = 0;
 
-    InputManager* getInput()      { Kunlaboro::Message msg = sendGlobalQuestion("Get.Input"); if (msg.handled) return boost::any_cast<InputManager*>(msg.payload); return NULL; }
-    SettingsManager* getSetings() { Kunlaboro::Message msg = sendGlobalQuestion("Get.Settings"); if (msg.handled) return boost::any_cast<SettingsManager*>(msg.payload); return NULL; }
-    sf::Font* getFont()           { Kunlaboro::Message msg = sendGlobalQuestion("Get.Font"); if (msg.handled) return boost::any_cast<sf::Font*>(msg.payload); return NULL; }
+    InputManager* getInput()       { Kunlaboro::Message msg = sendGlobalQuestion("Get.Input"); if (msg.handled) return boost::any_cast<InputManager*>(msg.payload); return NULL; }
+    SettingsManager* getSettings() { Kunlaboro::Message msg = sendGlobalQuestion("Get.Settings"); if (msg.handled) return boost::any_cast<SettingsManager*>(msg.payload); return NULL; }
+    sf::Font* getFont()            { Kunlaboro::Message msg = sendGlobalQuestion("Get.Font"); if (msg.handled) return boost::any_cast<sf::Font*>(msg.payload); return NULL; }
 
 private:
     inline void update(const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload));              }

@@ -1,12 +1,17 @@
 #include "MainClass.hpp"
 #include "Components.hpp"
+#include "PlayerController.hpp"
+#include "EnemyController.hpp"
+
+#include "GameState.hpp"
+#include "MenuState.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 1;
+static const int MAX_BINDS = 5;
 
 MainClass::MainClass(int argc, char** argv)
 {
@@ -28,6 +33,31 @@ MainClass::MainClass(int argc, char** argv)
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
     sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
+    sys.registerComponent<PlayerController>("PlayerController");
+    sys.registerComponent<EnemyController>("EnemyController");
+    sys.registerComponent<GameState>("GameState");
+
+    // Basic binds
+    {
+        sf::Event ev;
+        ev.type = sf::Event::KeyPressed;
+        ev.key.alt = ev.key.control = ev.key.shift = false;
+        ev.key.code = sf::Keyboard::W;
+
+        mInput.addBind("Up", ev);
+
+        ev.key.code = sf::Keyboard::A;
+
+        mInput.addBind("Left", ev);
+
+        ev.key.code = sf::Keyboard::S;
+
+        mInput.addBind("Down", ev);
+
+        ev.key.code = sf::Keyboard::D;
+
+        mInput.addBind("Right", ev);
+    }
 }
 
 MainClass::~MainClass()
@@ -53,7 +83,7 @@ int MainClass::operator()()
         Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
         Kunlaboro::EntityId id = sys.createEntity();
-        //sys.addComponent(id, "Warmup");
+        sys.addComponent(id, "GameState");
         sys.finalizeEntity(id);
     }
 
@@ -101,7 +131,13 @@ int MainClass::operator()()
             switch(currentBind)
             {
             case 0:
-                bind = ""; break;
+                bind = "Up"; break;
+            case 1:
+                bind = "Down"; break;
+            case 2:
+                bind = "Left"; break;
+            case 3:
+                bind = "Right"; break;
             }
 
             if (!bind.empty())

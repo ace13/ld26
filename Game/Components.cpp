@@ -145,7 +145,9 @@ void ShapeDrawable::addedToEntity()
     });
 
     requestMessage("GetShape", [this](Kunlaboro::Message& msg){ msg.payload = getShape(); msg.handled = true; }, true);
-    requestMessage("SetShape", [this](const Kunlaboro::Message& msg){ setShape(boost::any_cast<sf::Shape*>(msg.payload)); }, true);
+    requestMessage("SetShape", [this](const Kunlaboro::Message& msg){
+        setShape(boost::any_cast<sf::Shape*>(msg.payload));
+    }, true);
     requestMessage("LD26.Draw",  [this](const Kunlaboro::Message& msg) {
             if (mShape == NULL || mPhysical == NULL)
                 return;
@@ -180,8 +182,8 @@ SpatialContainer::~SpatialContainer()
 void SpatialContainer::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->update(boost::any_cast<float>(msg.payload)); });
-    /*requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
-    changeRequestPriority("LD26.Draw", -1);*/
+    requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
+    changeRequestPriority("LD26.Draw", -1);
 
     requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ addEntity(msg.sender->getOwnerId()); msg.handled = true; }, true);
     requestMessage("GetObjects", [this](Kunlaboro::Message& msg) { if (mImpl == NULL) return; msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload)); msg.handled = true; });

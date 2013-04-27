@@ -2,10 +2,16 @@ SET(Game_Headers
 	Components.hpp
 	MenuState.hpp
 	InputManager.hpp
+	Math.hpp
 	MainClass.hpp
+	EnemyController.hpp
+	PlayerController.hpp
 	SettingsManager.hpp
 	StateManager.hpp
 	Telemetry.hpp
+
+	MenuState.hpp
+	GameState.hpp
 )
 
 SET(Game_Source
@@ -15,9 +21,14 @@ SET(Game_Source
 	MenuState.cpp
 	InputManager.cpp
 	MainClass.cpp
+	EnemyController.cpp
+	PlayerController.cpp
 	SettingsManager.cpp
 	StateManager.cpp
 	Telemetry.cpp
+
+	MenuState.cpp
+	GameState.cpp
 )
 
 SET(Game_Code ${Game_Source} ${Game_Headers})
