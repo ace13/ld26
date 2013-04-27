@@ -4,13 +4,16 @@
 #include "Math.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <Kunlaboro/EntitySystem.hpp>
 #include <iostream>
 
 PlayerController::PlayerController(): Kunlaboro::Component("PlayerController"), mInput(NULL), mPhys(NULL), mInert(NULL), mView(NULL), mSize(0)
 {
-
+    mTexture.create(128, 128);
+    const_cast<sf::Texture&>(mTexture.getTexture()).setSmooth(true);
 }
 
 PlayerController::~PlayerController()
@@ -21,7 +24,7 @@ void PlayerController::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload)); });
     requestMessage("LD26.Draw",   [this](const Kunlaboro::Message& msg) { draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
-    changeRequestPriority("LD26.Draw", 1);
+    changeRequestPriority("LD26.Draw", -1);
 
     requestMessage("Collision",   [this](const Kunlaboro::Message& msg)
     {
@@ -49,16 +52,17 @@ void PlayerController::addedToEntity()
              }
          }
     }, true);
-
+    
+    requireComponent("Components.MetaPhysical", [this](const Kunlaboro::Message& msg) { mMeta = static_cast<Components::MetaPhysical*>(msg.sender); mMeta->setMaxHealth(100); });
     requireComponent("Components.Physical", [this](const Kunlaboro::Message& msg) { mPhys = static_cast<Components::Physical*>(msg.sender); mPhys->setRadius(31); });
     requireComponent("Components.Inertia",  [this](const Kunlaboro::Message& msg) { mInert = static_cast<Components::Inertia*>(msg.sender); });
     requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg)
     {
-        sf::ConvexShape* shape = new sf::ConvexShape(4);
+        sf::ConvexShape* shape = new sf::ConvexShape(3);
         shape->setPoint(0, sf::Vector2f( 25,  0));
         shape->setPoint(1, sf::Vector2f(-25,  10));
         shape->setPoint(2, sf::Vector2f(-25, -10));
-        shape->setPoint(3, sf::Vector2f( 25,  0));
+        //shape->setPoint(3, sf::Vector2f( 25,  0));
 
         shape->setFillColor(sf::Color::Transparent);
         shape->setOutlineColor(sf::Color::White);
@@ -144,7 +148,7 @@ void PlayerController::update(float dt)
     }
 
     {
-        mView->setCenter(pos);
+        mView->setCenter(pos + curSpeed / 2.f);
 
         sf::Vector2f size = mView->getSize();
         float aspect = size.x/size.y;
@@ -155,9 +159,75 @@ void PlayerController::update(float dt)
 
 void PlayerController::draw(sf::RenderTarget& target)
 {
-    if (mPhys == NULL)
+    if (mPhys == NULL || mMeta == NULL)
         return;
 
+    mTexture.clear(sf::Color::Transparent);
+
+    sf::CircleShape circ(62);
+    circ.setPosition(1,1);
+    circ.setOutlineColor(sf::Color(127,127,127));
+    circ.setOutlineThickness(1.f);
+
+    mTexture.draw(circ);
+    
+    circ.setRadius(30);
+    circ.move(32,32);
+    //circ.setOutlineThickness(0.f);
+    circ.setFillColor(sf::Color(0,0,0,1));
+    
+    mTexture.draw(circ, sf::BlendNone);
+
+    for (int i = 0; i < 2; ++i)
+    {
+        float perc = mMeta->getHealth() / mMeta->getMaxHealth();
+
+        float base = 0;
+        if (i)
+        {
+            base = perc;
+            perc = 1-perc;
+        }
+
+        sf::Vector2f mid(64,64);
+
+        int pieces = ((int)(perc * 100) / 6);
+
+        sf::ConvexShape pie(pieces + 3);
+        pie.setPoint(0, mid);
+
+        sf::Vector2f scoords(cos((base*pi*2)-pi/2.f), sin((base*pi*2)-pi/2.f));
+        pie.setPoint(1, mid + scoords * 96.f);
+
+        for (int j = 0; j < pieces; ++j)
+        {
+            sf::Vector2f mcoords(cos((base*pi*2)-pi/2.f + ((perc/pieces) * j+1) * pi*2), sin((base*pi*2)-pi/2.f + ((perc/pieces) * j+1) * pi*2));
+
+            pie.setPoint(2 + j, mid + mcoords * 96.f);
+        }
+
+        sf::Vector2f ecoords(cos((base*pi*2)-pi/2.f + perc * pi*2), sin((base*pi*2)-pi/2.f + perc * pi*2));
+        pie.setPoint(2 + pieces, mid + ecoords * 96.f);
+
+        if (i)
+            pie.setFillColor(sf::Color(0,127,0));
+        else
+            pie.setFillColor(sf::Color::Green);
+        mTexture.draw(pie, sf::BlendMultiply);
+    }
+
+    mTexture.display();
+
+    sf::Sprite sprite(mTexture.getTexture());
+    sprite.setPosition(mPhys->getPos());
+    sprite.setOrigin(64,64);
+    float scale = (mPhys->getRadius()*2) / mTexture.getSize().x;
+    sprite.setScale(scale, scale);
+    sprite.setColor(sf::Color(255,255,255,125));
+
+    target.draw(sprite);
+
+    /*
     sf::Text angs;
     Kunlaboro::Message msg = sendGlobalQuestion("Get.Font");
     sf::Font& font = *boost::any_cast<sf::Font*>(msg.payload);
@@ -175,8 +245,7 @@ void PlayerController::draw(sf::RenderTarget& target)
 
     for (int i = 0; i < points.size(); ++i)
     {
-        angs.setPosition(X * points[i].first.x + Y * points[i].first.y);
-        angs.move(mPhys->getPos());
+        angs.setPosition(mPhys->getPos() + (X * points[i].first.x + Y * points[i].first.y));
         
         char tmp[4];
         sprintf_s(tmp, "%d", (int)(90 / points[i].second));
@@ -185,4 +254,5 @@ void PlayerController::draw(sf::RenderTarget& target)
 
         target.draw(angs);
     }
+    */
 }

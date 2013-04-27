@@ -1,10 +1,11 @@
 #include <Kunlaboro/Component.hpp>
 #include <SFML/System/Vector2.hpp>
+#include <SFML/Graphics/RenderTexture.hpp>
 
 #pragma once
 
 namespace sf { class RenderTarget; class View; }
-namespace Components { class Physical; class Inertia; }
+namespace Components { class MetaPhysical; class Physical; class Inertia; }
 class InputManager;
 
 class PlayerController : public Kunlaboro::Component
@@ -20,8 +21,11 @@ private:
     void draw(sf::RenderTarget& target);
 
     InputManager* mInput;
+    Components::MetaPhysical* mMeta;
     Components::Physical* mPhys;
     Components::Inertia* mInert;
     sf::View* mView;
     int mSize;
+
+    sf::RenderTexture mTexture;
 };

@@ -29,7 +29,7 @@ void MetaPhysical::addedToEntity()
         {
             float dt = boost::any_cast<float>(msg.payload);
 
-            mHealth = std::max(mMaxHealth, mHealth + mRegen * dt);
+            mHealth = std::min(mMaxHealth, mHealth + mRegen * dt);
         }
     });
 }
@@ -235,8 +235,9 @@ void SharpCorners::addedToEntity()
 
             mPoints.clear();
             sf::Shape* shape = mShape->getShape();
+            sf::Vector2f origin = shape->getOrigin();
 
-            int count = shape->getPointCount()-1;
+            int count = shape->getPointCount();
             for (int n = 0; n < count; ++n)
             {
                 int i = n, j = n+1, k = n+2;
@@ -259,7 +260,7 @@ void SharpCorners::addedToEntity()
                     }
                 }
 
-                sf::Vector2f A = shape->getPoint(i), B = shape->getPoint(j), C = shape->getPoint(k);
+                sf::Vector2f A = shape->getPoint(i) - origin, B = shape->getPoint(j) - origin, C = shape->getPoint(k) - origin;
 
                 float ABdot = dot(A, B),
                       BCdot = dot(B, C),
@@ -336,8 +337,8 @@ SpatialContainer::~SpatialContainer()
 void SpatialContainer::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->update(boost::any_cast<float>(msg.payload)); });
-    requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
-    changeRequestPriority("LD26.Draw", -1);
+    //requestMessage("LD26.Draw", [this](const Kunlaboro::Message& msg){ if (mImpl == NULL) return; mImpl->draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
+    //changeRequestPriority("LD26.Draw", -10);
 
     requestMessage("StoreMe", [this](Kunlaboro::Message& msg){ addEntity(msg.sender->getOwnerId()); msg.handled = true; }, true);
     requestMessage("GetObjects", [this](Kunlaboro::Message& msg) { if (mImpl == NULL) return; msg.payload = mImpl->getObjectsAt(boost::any_cast<sf::Vector2f>(msg.payload)); msg.handled = true; });

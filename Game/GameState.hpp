@@ -1,6 +1,9 @@
 #include "StateManager.hpp"
+#include <vector>
 
 #pragma once
+
+namespace sf { class Shape; }
 
 class GameState : public IState
 {
