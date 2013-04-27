@@ -4,6 +4,7 @@
 #include "Math.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <iostream>
 
 PlayerController::PlayerController(): Kunlaboro::Component("PlayerController"), mInput(NULL), mPhys(NULL), mInert(NULL), mView(NULL), mSize(0)
@@ -42,7 +43,9 @@ void PlayerController::addedToEntity()
     {
         Kunlaboro::Message msg = sendGlobalQuestion("Get.GameView");
         if (msg.handled)
+        {
             mView = boost::any_cast<sf::View*>(msg.payload);
+        }
     }
 
     if (mInput == NULL)
@@ -113,6 +116,11 @@ void PlayerController::update(float dt)
 
     {
         mView->setCenter(pos);
+
+        sf::Vector2f size = mView->getSize();
+        float aspect = size.x/size.y;
+
+        mView->setSize(512 * aspect, 512);
     }
 }
 
@@ -121,5 +129,30 @@ void PlayerController::draw(sf::RenderTarget& target)
     if (mPhys == NULL)
         return;
 
+    sf::Text angs;
+    Kunlaboro::Message msg = sendGlobalQuestion("Get.Font");
+    sf::Font& font = *boost::any_cast<sf::Font*>(msg.payload);
 
+    angs.setFont(font);
+    angs.setCharacterSize(8);
+
+    msg = sendQuestion("GetPoints");
+    const std::vector<std::pair<sf::Vector2f, float> >& points = *boost::any_cast<const std::vector<std::pair<sf::Vector2f, float> >*>(msg.payload);
+
+    float ang = mPhys->getRot() * deg2rad;
+    sf::Vector2f Y(cos(ang + pi/2), sin(ang + pi/2));
+    sf::Vector2f X(cos(ang), sin(ang));
+
+    for (int i = 0; i < points.size(); ++i)
+    {
+        angs.setPosition(X * points[i].first.x + Y * points[i].first.y);
+        angs.move(mPhys->getPos());
+        
+        char tmp[4];
+        sprintf_s(tmp, "%d", (int)(90 / points[i].second));
+
+        angs.setString(tmp);
+
+        target.draw(angs);
+    }
 }

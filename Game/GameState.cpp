@@ -24,6 +24,7 @@ void GameState::setup()
     sys.addComponent(player, "Components.Physical");
     sys.addComponent(player, "Components.Inertia");
     sys.addComponent(player, "Components.ShapeDrawable");
+    sys.addComponent(player, "Components.SharpCorners");
     sys.addComponent(player, "PlayerController");
     sys.finalizeEntity(player);
 
@@ -35,6 +36,7 @@ void GameState::setup()
         sys.addComponent(e, "Components.Physical");
         sys.addComponent(e, "Components.Inertia");
         sys.addComponent(e, "Components.ShapeDrawable");
+        //sys.addComponent(e, "Components.SharpCorners");
         sys.addComponent(e, "EnemyController");
         sys.finalizeEntity(e);
 

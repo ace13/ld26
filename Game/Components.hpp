@@ -82,6 +82,22 @@ private:
     sf::Shape* mShape;
 };
 
+class SharpCorners : public Kunlaboro::Component
+{
+public:
+    SharpCorners();
+    ~SharpCorners();
+
+    void addedToEntity();
+
+    const std::vector<std::pair<sf::Vector2f, float> >* getPoints() const;
+
+private:
+    ShapeDrawable* mShape;
+    bool mModified;
+    std::vector<std::pair<sf::Vector2f, float> > mPoints;
+};
+
 class SpatialContainer : public Kunlaboro::Component
 {
 public:

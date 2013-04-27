@@ -1,4 +1,5 @@
 #include "Components.hpp"
+#include "Math.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
@@ -167,6 +168,117 @@ void ShapeDrawable::addedToEntity()
 
             target.draw(*mShape);
         });
+}
+
+SharpCorners::SharpCorners() : Kunlaboro::Component("Components.SharpCorners"), mShape(NULL), mModified(false)
+{
+}
+
+SharpCorners::~SharpCorners()
+{
+}
+
+void SharpCorners::addedToEntity()
+{
+    requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg) { mShape = static_cast<ShapeDrawable*>(msg.sender); mModified = true; });
+
+    requestMessage("GetPoints", [this](Kunlaboro::Message& msg) { msg.payload = getPoints(); msg.handled = true; }, true);
+    requestMessage("SetShape", [this](const Kunlaboro::Message& msg) { mModified = true; }, true);
+    requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
+        if (mModified)
+        {
+            mModified = false;
+
+            mPoints.clear();
+            sf::Shape* shape = mShape->getShape();
+
+            int count = shape->getPointCount()-1;
+            for (int n = 0; n < count; ++n)
+            {
+                int i = n, j = n+1, k = n+2;
+                if (n >= count-2)
+                {
+                    if (i == count-2)
+                    {
+                        k = 0;
+                    }
+                    else if (i == count-1)
+                    {
+                        j = 0;
+                        k = 1;
+                    }
+                    else
+                    {
+                        i = 0;
+                        j = 1;
+                        k = 2;
+                    }
+                }
+
+                sf::Vector2f A = shape->getPoint(i), B = shape->getPoint(j), C = shape->getPoint(k);
+
+                auto dot = [](const sf::Vector2f& a, const sf::Vector2f& b) -> float{ sf::Vector2f c = b-a; return ((c.x*c.x) + (c.y*c.y)); };
+
+                float ABdot = dot(A, B),
+                      BCdot = dot(B, C),
+                      ACdot = dot(A, C);
+                float ABlen = sqrt(ABdot),
+                      BClen = sqrt(BCdot),
+                      AClen = sqrt(ACdot);
+
+                float max = std::max(ABlen, std::max(BClen, AClen));
+
+                float LargestAng = 0;
+                sf::Vector2f Point;
+                /*if (max == ABlen)
+                {
+                    float Cang = acos((ABdot - BCdot - ACdot)/(-2 * BClen * AClen));
+                    float Bang = asin(AClen / (ABlen / sin(Cang)));
+                    float Aang = pi - Bang - Cang;
+
+                    std::cerr << "Angles: " << (Cang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Aang * rad2deg) << std::endl;
+
+                    LargestAng = Cang * rad2deg;
+                    Point = C;
+                }
+                else if (max == BClen)
+                {
+                    float Aang = acos((BCdot - ACdot - ABdot)/(-2 * AClen * ABlen));
+                    float Bang = asin(ABlen / (BClen / sin(Aang)));
+                    float Cang = pi - Bang - Aang;
+
+                    std::cerr << "Angles: " << (Aang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Cang * rad2deg) << std::endl;
+
+                    LargestAng = Aang * rad2deg;
+                    Point = A;
+                }
+                else if (max == AClen)*/
+                {
+                    float Bang = acos((ACdot - ABdot - BCdot)/(-2 * ABlen * BClen));
+                    float Aang = asin(BClen / (AClen / sin(Bang)));
+                    float Cang = pi - Aang - Bang;
+
+                    LargestAng = Bang * rad2deg;
+                    Point = B;
+                }
+
+                float score = 90 / LargestAng;
+
+                if (score > 0)
+                {
+                    auto it = std::find_if(mPoints.begin(), mPoints.end(), [Point](const std::pair<sf::Vector2f, float>& val){ return val.first == Point; });
+
+                    if (it == mPoints.end())
+                        mPoints.push_back(std::pair<sf::Vector2f, float>(B, score));
+                }
+            }
+        }
+    });
+}
+
+const std::vector<std::pair<sf::Vector2f, float> >* SharpCorners::getPoints() const
+{
+    return &mPoints;
 }
 
 SpatialContainer::SpatialContainer() : Kunlaboro::Component("Components.SpatialContainer"), mImpl(NULL)

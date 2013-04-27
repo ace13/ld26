@@ -11,7 +11,7 @@
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 5;
+static const int MAX_BINDS = 4;
 
 MainClass::MainClass(int argc, char** argv)
 {
@@ -33,6 +33,7 @@ MainClass::MainClass(int argc, char** argv)
     sys.registerComponent<Components::ShapeDrawable>("Components.ShapeDrawable");
     sys.registerComponent<Components::TexturedDrawable>("Components.TexturedDrawable");
     sys.registerComponent<Components::SpatialContainer>("Components.SpatialContainer");
+    sys.registerComponent<Components::SharpCorners>("Components.SharpCorners");
     sys.registerComponent<PlayerController>("PlayerController");
     sys.registerComponent<EnemyController>("EnemyController");
     sys.registerComponent<GameState>("GameState");
