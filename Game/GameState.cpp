@@ -101,7 +101,7 @@ void GameState::setup()
         sendMessageToEntity(e, "SetRadius", size);
         sendMessageToEntity(e, "SetShape", shape);
         sendMessageToEntity(e, "SetOrigin");
-        sendMessageToEntity(e, "SetPos", sf::Vector2f(rand()%16000, rand()%16000));
+        sendMessageToEntity(e, "SetPos", sf::Vector2f(rand()%18000-1000, rand()%18000-1000));
         sendMessageToEntity(e, "SetRotSpeed", (float)(90 - rand()%180)/45.f);
         sendMessageToEntity(e, "SetSpeed", sf::Vector2f(4 - rand()%8, 4 - rand()%8) * 24.f / size);
 
@@ -180,6 +180,15 @@ void GameState::update(float dt)
         {
             mEditorRot += (left - right) * 100 * dt;
             mEditorZoom += (down - up) * 150 * dt;
+        }
+        else if (act1)
+        {
+
+        }
+        else
+        {
+            if (up > 0.5f || down > 0.5f || left > 0.5f || right > 0.5f)
+                std::cerr << "TODO: Change selected point" << std::endl;
         }
 
         float aspect = currentSize.x/currentSize.y;
@@ -308,8 +317,8 @@ void GameState::drawUi(sf::RenderTarget& target)
             pos.y *= scale.y + 0.25;
             pos += target.getView().getCenter();
 
-            sf::CircleShape circ(8.f);
-            circ.setOrigin(8,8);
+            sf::CircleShape circ(4.f);
+            circ.setOrigin(4,4);
             circ.setFillColor(sf::Color::Transparent);
             circ.setOutlineColor(sf::Color::Black);
             circ.setOutlineThickness(4.f);

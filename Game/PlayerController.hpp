@@ -25,7 +25,7 @@ private:
     Components::Physical* mPhys;
     Components::Inertia* mInert;
     sf::View* mView;
-    int mSize;
+    int mKills;
 
     sf::RenderTexture mTexture;
 };

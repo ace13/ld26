@@ -27,6 +27,8 @@ private:
     bool mInEditor;
     sf::View mSnapshot;
 
+    sf::Vector2f mSelected;
+
     Kunlaboro::EntityId mWorld;
     Kunlaboro::EntityId mPlayer;
 };

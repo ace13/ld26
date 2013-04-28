@@ -10,7 +10,7 @@
 #include <Kunlaboro/EntitySystem.hpp>
 #include <iostream>
 
-PlayerController::PlayerController(): Kunlaboro::Component("PlayerController"), mInput(NULL), mPhys(NULL), mInert(NULL), mView(NULL), mSize(0)
+PlayerController::PlayerController(): Kunlaboro::Component("PlayerController"), mInput(NULL), mPhys(NULL), mInert(NULL), mView(NULL), mKills(0)
 {
     mTexture.create(128, 128);
     const_cast<sf::Texture&>(mTexture.getTexture()).setSmooth(true);
@@ -25,6 +25,23 @@ void PlayerController::addedToEntity()
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload)); });
     requestMessage("LD26.Draw",   [this](const Kunlaboro::Message& msg) { draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
     changeRequestPriority("LD26.Draw", 4);
+    requestMessage("LD26.DrawUi", [this](const Kunlaboro::Message& msg)
+    {
+        sf::RenderTarget& target = *boost::any_cast<sf::RenderTarget*>(msg.payload);
+
+        sf::Text kills;
+        Kunlaboro::Message msg2 = sendGlobalQuestion("Get.Font");
+
+        kills.setFont(*boost::any_cast<sf::Font*>(msg2.payload));
+        kills.setCharacterSize(16);
+
+        char text[4];
+        sprintf(text, "%d", mKills);
+        kills.setString("Pops:\n" + std::string(text));
+        kills.setPosition((sf::Vector2f)target.getSize() - sf::Vector2f(kills.getLocalBounds().width + 8, target.getSize().y - 8));
+
+        target.draw(kills);
+    });
 
     requestMessage("Collision",   [this](const Kunlaboro::Message& msg)
     {
@@ -49,6 +66,7 @@ void PlayerController::addedToEntity()
                  //getEntitySystem()->destroyEntity(other->getOwnerId());
 
                  sendMessageToEntity(other->getOwnerId(), "SetHealth", 0.f);
+                 mKills++;
 
                  std::cerr << "TODO: Calculate damage" << std::endl;
              }
@@ -169,7 +187,7 @@ void PlayerController::draw(sf::RenderTarget& target)
 
     mTexture.clear(sf::Color::Transparent);
 
-    sf::CircleShape circ(62);
+    sf::CircleShape circ(62, 8);
     circ.setPosition(1,1);
     circ.setOutlineColor(sf::Color(127,127,127));
     circ.setOutlineThickness(1.f);

@@ -59,10 +59,10 @@ void Physical::addedToEntity()
     requestMessage("You're Stored", [this](const Kunlaboro::Message& msg) { setContainer(static_cast<SpatialContainer*>(msg.sender)); }, true);
 
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
-        if (mInvul > 0)
-            mInvul = std::max(0.f, mInvul - boost::any_cast<float>(msg.payload));
+        //if (mInvul > 0)
+        //    mInvul = std::max(0.f, mInvul - boost::any_cast<float>(msg.payload));
 
-        if (!hasContainer() || mInvul > 0)
+        if (!hasContainer())// || mInvul > 0)
             return;
 
         std::vector<Kunlaboro::EntityId> ents = mContainer->getObjectsAt(getPos(), getRadius()*3);
@@ -94,8 +94,7 @@ void Physical::addedToEntity()
             {
                 sendMessageToEntity(ents[i], "Collision");
 
-                mInvul = 0.75;
-                return;
+                //mInvul = 0.75;
             }
         }
     });
