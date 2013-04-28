@@ -13,7 +13,7 @@
 
 static const int MAX_BINDS = 4;
 
-MainClass::MainClass(int argc, char** argv)
+MainClass::MainClass(int argc, char** argv) : mSounds(mSettings)
 {
     std::list<std::string> stack;
     for (int i = 1; i < argc; i++)
@@ -26,6 +26,12 @@ MainClass::MainClass(int argc, char** argv)
     mManager.setSound(mSounds);
     mManager.setViews(mGame, mUi);
     mManager.setTelemetry(mTelem);
+
+    mSounds.registerMusicCallback([this](const std::string& song)
+    {
+        std::cout << "Now Playing: " << song << std::endl;
+        mManager.getSystem().sendGlobalMessage("Now Playing", song);
+    });
 
     Kunlaboro::EntitySystem& sys = mManager.getSystem();
 
@@ -60,6 +66,14 @@ MainClass::MainClass(int argc, char** argv)
         ev.key.code = sf::Keyboard::D;
 
         mInput.addBind("Right", ev);
+    }
+
+    // Music
+    {
+        mSounds.addMusic("Fast_and_exultant-device1.ogg", "Fast and exultant");
+        mSounds.addMusic("The_caustic_boy_and_grandpa_s_rebellious_giant_from_Melbourne-device1.ogg", "The caustic boy and grandpa's rebellious giant from Melbourne");
+        mSounds.addMusic("The_dependent_doctor_in_the_shed-device1.ogg", "The dependent doctor in the shed");
+        mSounds.addMusic("The_swaggering_cow-device1.ogg", "The swaggering cow");
     }
 }
 
@@ -100,6 +114,8 @@ int MainClass::operator()()
         mUi.setSize(tSize);
         mUi.setCenter(tSize/2.f);
     }
+
+    mSounds.startMusic();
 
     while (app.isOpen())
     {

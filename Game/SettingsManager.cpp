@@ -7,6 +7,9 @@ SettingsManager::SettingsManager()
     mSettings["Width"] = 800;
     mSettings["Height"] = 600;
     mSettings["Bind"] = false;
+
+    mSettings["Music Volume"] = 50.f;
+    mSettings["Sound Volume"] = 75.f;
 }
 
 SettingsManager::~SettingsManager()
@@ -43,6 +46,20 @@ void SettingsManager::handleArgs(std::list<std::string>& stack)
                 mSettings["Width"] = atoi(width.c_str());
                 mSettings["Height"] = atoi(height.c_str());
             }
+        }
+        else if (val == "-m")
+        {
+            std::string vol = stack.back();
+            stack.pop_back();
+
+            mSettings["Music Volume"] = atof(vol.c_str());
+        }
+        else if (val == "-s")
+        {
+            std::string vol = stack.back();
+            stack.pop_back();
+
+            mSettings["Sound Volume"] = atof(vol.c_str());
         }
     }
 }

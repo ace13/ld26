@@ -43,6 +43,11 @@ private:
         void addedToEntity();
 
         StateManager& mState;
+
+    private:
+        std::string mCurrentSong;
+        float mSongPopout;
+        float mSongTimeout;
     };
 
     sf::Font mGlobalFont;

@@ -471,10 +471,14 @@ std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos,
             if (inRange(mBounds.top + mBounds.height / 2.f, mBounds.top + mBounds.height, pos.y, maxDist))
             {
                 child = mSE->getObjectsAt(pos);
+                if (!child.empty())
+                    tmp.insert(tmp.end(), child.begin(), child.end());
             }
             if (inRange(mBounds.top, mBounds.top + mBounds.height / 2.f, pos.y, maxDist))
             {
                 child = mNE->getObjectsAt(pos);
+                if (!child.empty())
+                    tmp.insert(tmp.end(), child.begin(), child.end());
             }
         }
         if (inRange(mBounds.left, mBounds.left + mBounds.width / 2.f, pos.x, maxDist))
@@ -482,15 +486,16 @@ std::vector<Kunlaboro::EntityId> QuadTree::getObjectsAt(const sf::Vector2f& pos,
             if (inRange(mBounds.top + mBounds.height / 2.f, mBounds.top + mBounds.height, pos.y, maxDist))
             {
                 child = mSW->getObjectsAt(pos);
+                if (!child.empty())
+                    tmp.insert(tmp.end(), child.begin(), child.end());
             }
             if (inRange(mBounds.top, mBounds.top + mBounds.height / 2.f, pos.y, maxDist))
             {
                 child = mNW->getObjectsAt(pos);
+                if (!child.empty())
+                    tmp.insert(tmp.end(), child.begin(), child.end());
             }
         }
-
-        if (!child.empty())
-            tmp.insert(tmp.end(), child.begin(), child.end());
     }
 
     return tmp;
