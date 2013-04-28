@@ -218,7 +218,7 @@ void GameState::update(float dt)
         mToneIn = -1;
     }
 
-    if (mInEditor || mToneIn > 0.25f)
+    if (mInEditor || mToneIn > 0)
         setHandled();
 }
 void GameState::draw(sf::RenderTarget& target)
@@ -227,7 +227,7 @@ void GameState::draw(sf::RenderTarget& target)
 
     if (mInEditor || mToneIn > 0)
     {
-        float alpha = (mToneIn < 0 ? 1 : mToneIn) * 255;
+        float alpha = (mToneIn < 0 ? mInEditor : mToneIn) * 255;
 
         sf::RectangleShape tone(view.getSize());
     
@@ -249,6 +249,28 @@ void GameState::draw(sf::RenderTarget& target)
         platform.setPosition(boost::any_cast<sf::Vector2f>(msg.payload));
 
         target.draw(platform);
+
+        sf::ConvexShape arrow(7);
+
+        arrow.setPoint(0, sf::Vector2f(35, 0));
+        arrow.setPoint(1, sf::Vector2f(15, 15));
+        arrow.setPoint(2, sf::Vector2f(15, 4));
+        arrow.setPoint(3, sf::Vector2f(0, 4));
+        arrow.setPoint(4, sf::Vector2f(0, -4));
+        arrow.setPoint(5, sf::Vector2f(15, -4));
+        arrow.setPoint(6, sf::Vector2f(15, -15));
+
+        msg = sendQuestionToEntity(mPlayer, "GetRot");
+        float rot = boost::any_cast<float>(msg.payload);
+
+        arrow.setRotation(rot);
+        arrow.setPosition(platform.getPosition() + sf::Vector2f(cos(rot * deg2rad), sin(rot * deg2rad)) * (platform.getRadius() + 6));
+
+        arrow.setFillColor(sf::Color::Transparent);
+        arrow.setOutlineColor(sf::Color(255,255,255, alpha));
+        arrow.setOutlineThickness(1.f);
+
+        target.draw(arrow);
     }
 }
 void GameState::drawUi(sf::RenderTarget& target)
@@ -259,50 +281,43 @@ void GameState::drawUi(sf::RenderTarget& target)
     Kunlaboro::Message msg = sendGlobalQuestion("Get.GameView");
     sf::View& gameView = *boost::any_cast<sf::View*>(msg.payload);
 
-    msg = sendQuestionToEntity(mPlayer, "GetShape");
-    sf::Shape* shape = boost::any_cast<sf::Shape*>(msg.payload);
-    sf::Transform playerToUITransform;
-    sf::Vector2f scale = target.getView().getSize();
-    scale.x /= gameView.getSize().x;
-    scale.y /= gameView.getSize().y;
-    playerToUITransform.rotate(shape->getRotation(), sf::Vector2f(0,0)).
-        translate(shape->getPosition() - gameView.getCenter()).
-        translate(target.getView().getSize()/2.f);//.
+    std::vector<Kunlaboro::Component*> comps = getEntitySystem()->getAllComponentsOnEntity(mPlayer, "Components.ShapeDrawable");
 
-        //scale(scale);
-
-
-
-    /*
-    playerToUITransform.rotate(shape->getRotation());
-    playerToUITransform.scale(gameView.getSize());
-
-    playerToUITransform.translate(target.getView().getCenter());
-    playerToUITransform.rotate(-gameView.getRotation());
-    */
-    for (int i = 0; i < shape->getPointCount(); ++i)
+    for (auto it = comps.begin(); it != comps.end(); ++it)
     {
-        sf::Vector2f pos = shape->getPoint(i) - shape->getOrigin();
+        auto comp = static_cast<Components::ShapeDrawable*>(*it);
+        if (comp == NULL)
+            continue;
+        
+        sf::Shape* shape = comp->getShape();
+        sf::Vector2f scale = target.getView().getSize();
+        scale.x /= gameView.getSize().x;
+        scale.y /= gameView.getSize().y;
+
+        for (int i = 0; i < shape->getPointCount(); ++i)
         {
-            sf::Transform rot;
-            rot.rotate(shape->getRotation()-gameView.getRotation());
-            pos = rot.transformPoint(pos);
+            sf::Vector2f pos = shape->getPoint(i) - shape->getOrigin();
+            {
+                sf::Transform rot;
+                rot.rotate(shape->getRotation()-gameView.getRotation());
+                pos = rot.transformPoint(pos);
+            }
+            pos += shape->getPosition();
+            pos -= gameView.getCenter();
+            pos.x *= scale.x + 0.25;
+            pos.y *= scale.y + 0.25;
+            pos += target.getView().getCenter();
+
+            sf::CircleShape circ(8.f);
+            circ.setOrigin(8,8);
+            circ.setFillColor(sf::Color::Transparent);
+            circ.setOutlineColor(sf::Color::Black);
+            circ.setOutlineThickness(4.f);
+
+            circ.setPosition(pos);
+
+            target.draw(circ);
         }
-        pos += shape->getPosition();
-        //pos = shape->getTransform().transformPoint(pos);
-        pos -= gameView.getCenter();
-        pos.x *= scale.x + 0.25;
-        pos.y *= scale.y + 0.25;
-        pos += target.getView().getCenter();
-
-        sf::CircleShape circ(8.f);
-        circ.setOrigin(8,8);
-        circ.setFillColor(sf::Color::Transparent);
-        circ.setOutlineColor(sf::Color::Black);
-        circ.setOutlineThickness(4.f);
-
-        circ.setPosition(pos);
-
-        target.draw(circ);
     }
 }
+

@@ -129,7 +129,7 @@ void PlayerController::update(float dt)
     targetVec.y = sin(curAng);
 
     sf::Vector2f curSpeed = mInert->getSpeed();
-    sendGlobalMessage("Background.Parallax", -curSpeed);
+    //sendGlobalMessage("Background.Parallax", -curSpeed);
     float curDot = curSpeed.x * curSpeed.x + curSpeed.y * curSpeed.y;
     targetDot = targetVec.x * targetVec.x + targetVec.y * targetVec.y;
 

@@ -238,95 +238,100 @@ SharpCorners::~SharpCorners()
 
 void SharpCorners::addedToEntity()
 {
-    requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg) { mShape = static_cast<ShapeDrawable*>(msg.sender); mModified = true; });
-
     requestMessage("GetPoints", [this](Kunlaboro::Message& msg) { msg.payload = getPoints(); msg.handled = true; }, true);
     requestMessage("SetShape", [this](const Kunlaboro::Message& msg) { mModified = true; }, true);
+    requestMessage("InvalidateShape", [this](const Kunlaboro::Message& msg) { mModified = true; }, true);
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) {
         if (mModified)
         {
             mModified = false;
 
             mPoints.clear();
-            sf::Shape* shape = mShape->getShape();
-            sf::Vector2f origin = shape->getOrigin();
 
-            int count = shape->getPointCount();
-            for (int n = 0; n < count; ++n)
+            std::vector<Kunlaboro::Component*> shapes = getEntitySystem()->getAllComponentsOnEntity(getOwnerId(), "Components.ShapeDrawable");
+
+            for (auto it = shapes.begin(); it != shapes.end(); ++it)
             {
-                int i = n, j = n+1, k = n+2;
-                if (n >= count-2)
+                sf::Shape* shape = static_cast<Components::ShapeDrawable*>(*it)->getShape();
+                sf::Vector2f origin = shape->getOrigin();
+
+                int count = shape->getPointCount();
+                for (int n = 0; n < count; ++n)
                 {
-                    if (i == count-2)
+                    int i = n, j = n+1, k = n+2;
+                    if (n >= count-2)
                     {
-                        k = 0;
+                        if (i == count-2)
+                        {
+                            k = 0;
+                        }
+                        else if (i == count-1)
+                        {
+                            j = 0;
+                            k = 1;
+                        }
+                        else
+                        {
+                            i = 0;
+                            j = 1;
+                            k = 2;
+                        }
                     }
-                    else if (i == count-1)
+
+                    sf::Vector2f A = shape->getPoint(i) - origin, B = shape->getPoint(j) - origin, C = shape->getPoint(k) - origin;
+
+                    float ABdot = dot(A, B),
+                          BCdot = dot(B, C),
+                          ACdot = dot(A, C);
+                    float ABlen = sqrt(ABdot),
+                          BClen = sqrt(BCdot),
+                          AClen = sqrt(ACdot);
+
+                    float max = std::max(ABlen, std::max(BClen, AClen));
+
+                    float LargestAng = 0;
+                    sf::Vector2f Point;
+                    /*if (max == ABlen)
                     {
-                        j = 0;
-                        k = 1;
+                        float Cang = acos((ABdot - BCdot - ACdot)/(-2 * BClen * AClen));
+                        float Bang = asin(AClen / (ABlen / sin(Cang)));
+                        float Aang = pi - Bang - Cang;
+
+                        std::cerr << "Angles: " << (Cang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Aang * rad2deg) << std::endl;
+
+                        LargestAng = Cang * rad2deg;
+                        Point = C;
                     }
-                    else
+                    else if (max == BClen)
                     {
-                        i = 0;
-                        j = 1;
-                        k = 2;
+                        float Aang = acos((BCdot - ACdot - ABdot)/(-2 * AClen * ABlen));
+                        float Bang = asin(ABlen / (BClen / sin(Aang)));
+                        float Cang = pi - Bang - Aang;
+
+                        std::cerr << "Angles: " << (Aang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Cang * rad2deg) << std::endl;
+
+                        LargestAng = Aang * rad2deg;
+                        Point = A;
                     }
-                }
+                    else if (max == AClen)*/
+                    {
+                        float Bang = acos((ACdot - ABdot - BCdot)/(-2 * ABlen * BClen));
+                        float Aang = asin(BClen / (AClen / sin(Bang)));
+                        float Cang = pi - Aang - Bang;
 
-                sf::Vector2f A = shape->getPoint(i) - origin, B = shape->getPoint(j) - origin, C = shape->getPoint(k) - origin;
+                        LargestAng = Bang * rad2deg;
+                        Point = B;
+                    }
 
-                float ABdot = dot(A, B),
-                      BCdot = dot(B, C),
-                      ACdot = dot(A, C);
-                float ABlen = sqrt(ABdot),
-                      BClen = sqrt(BCdot),
-                      AClen = sqrt(ACdot);
+                    float score = 90 / LargestAng;
 
-                float max = std::max(ABlen, std::max(BClen, AClen));
+                    if (score > 0)
+                    {
+                        auto it = std::find_if(mPoints.begin(), mPoints.end(), [Point](const std::pair<sf::Vector2f, float>& val){ return val.first == Point; });
 
-                float LargestAng = 0;
-                sf::Vector2f Point;
-                /*if (max == ABlen)
-                {
-                    float Cang = acos((ABdot - BCdot - ACdot)/(-2 * BClen * AClen));
-                    float Bang = asin(AClen / (ABlen / sin(Cang)));
-                    float Aang = pi - Bang - Cang;
-
-                    std::cerr << "Angles: " << (Cang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Aang * rad2deg) << std::endl;
-
-                    LargestAng = Cang * rad2deg;
-                    Point = C;
-                }
-                else if (max == BClen)
-                {
-                    float Aang = acos((BCdot - ACdot - ABdot)/(-2 * AClen * ABlen));
-                    float Bang = asin(ABlen / (BClen / sin(Aang)));
-                    float Cang = pi - Bang - Aang;
-
-                    std::cerr << "Angles: " << (Aang * rad2deg) << ", " << (Bang * rad2deg) << ", " << (Cang * rad2deg) << std::endl;
-
-                    LargestAng = Aang * rad2deg;
-                    Point = A;
-                }
-                else if (max == AClen)*/
-                {
-                    float Bang = acos((ACdot - ABdot - BCdot)/(-2 * ABlen * BClen));
-                    float Aang = asin(BClen / (AClen / sin(Bang)));
-                    float Cang = pi - Aang - Bang;
-
-                    LargestAng = Bang * rad2deg;
-                    Point = B;
-                }
-
-                float score = 90 / LargestAng;
-
-                if (score > 0)
-                {
-                    auto it = std::find_if(mPoints.begin(), mPoints.end(), [Point](const std::pair<sf::Vector2f, float>& val){ return val.first == Point; });
-
-                    if (it == mPoints.end())
-                        mPoints.push_back(std::pair<sf::Vector2f, float>(B, score));
+                        if (it == mPoints.end())
+                            mPoints.push_back(std::pair<sf::Vector2f, float>(B, score));
+                    }
                 }
             }
         }

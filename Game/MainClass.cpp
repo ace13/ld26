@@ -11,7 +11,7 @@
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 6;
+static const int MAX_BINDS = 7;
 
 MainClass::MainClass(int argc, char** argv) : mSounds(mSettings)
 {
@@ -83,6 +83,7 @@ MainClass::MainClass(int argc, char** argv) : mSounds(mSettings)
     // Music
     {
         mSounds.addMusic("Fast_and_exultant-device1.ogg", "Fast and exultant");
+        mSounds.addMusic("The_sexy_dwarf_and_sister_s_mature_coward-device1.ogg", "The sexy dwarf and sister's mature coward");
         mSounds.addMusic("The_caustic_boy_and_grandpa_s_rebellious_giant_from_Melbourne-device1.ogg", "The caustic boy and grandpa's rebellious giant from Melbourne");
         mSounds.addMusic("The_dependent_doctor_in_the_shed-device1.ogg", "The dependent doctor in the shed");
         mSounds.addMusic("The_swaggering_cow-device1.ogg", "The swaggering cow");
@@ -171,8 +172,10 @@ int MainClass::operator()()
             case 3:
                 bind = "Right"; break;
             case 4:
-                bind = "Action"; break;
+                bind = "Action1"; break;
             case 5:
+                bind = "Action2"; break;
+            case 6:
                 bind = "Mode"; break;
             }
 
