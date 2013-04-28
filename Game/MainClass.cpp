@@ -128,6 +128,7 @@ int MainClass::operator()()
 
             if (ev.type == sf::Event::Closed)
             {
+                mSounds.stopMusic();
                 app.close();
             }
             else if (ev.type == sf::Event::Resized)

@@ -76,7 +76,7 @@ void StateManager::drawUi(sf::RenderTarget& target)
 #ifdef WIN32
         sprintf_s(tmp, "Components: %d, entities: %d.\nFPS: %-4d (%.2f avg)\nDT:  %-4.2f (%.2f avg)", mSystem.numCom(), mSystem.numEnt(), mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
 #else
-        sprintf(tmp, "Components: %d, entities: %d.\nFPS: %-4d (%.2f avg)\nDT:  %4-.2f (%.2f avg)", mSystem.numCom(), mSystem.numEnt(), mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
+        sprintf(tmp, "Components: %d, entities: %d.\nFPS: %-4d (%.2f avg)\nDT:  %-4.2f (%.2f avg)", mSystem.numCom(), mSystem.numEnt(), mTelem->getFPS(), mTelem->getAverageFPS(), mTelem->getDT(), mTelem->getAverageDT());
 #endif
         prof.setString(tmp);
     }
@@ -150,7 +150,7 @@ void StateManager::Internals::addedToEntity()
 
         sf::Text playing("Now Playing:", mState.mGlobalFont);
         sf::FloatRect bounds = playing.getLocalBounds();
-        playing.setPosition(rect.getPosition() - sf::Vector2f(350, 7w2) + sf::Vector2f(bounds.left + bounds.width/2, bounds.top + bounds.height/2));
+        playing.setPosition(rect.getPosition() - sf::Vector2f(350, 72) + sf::Vector2f(bounds.left + bounds.width/2, bounds.top + bounds.height/2));
 
         target.draw(playing);
         playing.setString(mCurrentSong);
