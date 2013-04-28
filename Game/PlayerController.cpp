@@ -24,7 +24,7 @@ void PlayerController::addedToEntity()
 {
     requestMessage("LD26.Update", [this](const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload)); });
     requestMessage("LD26.Draw",   [this](const Kunlaboro::Message& msg) { draw(*boost::any_cast<sf::RenderTarget*>(msg.payload)); });
-    changeRequestPriority("LD26.Draw", -1);
+    changeRequestPriority("LD26.Draw", 4);
 
     requestMessage("Collision",   [this](const Kunlaboro::Message& msg)
     {
@@ -60,6 +60,8 @@ void PlayerController::addedToEntity()
     requireComponent("Components.Inertia",  [this](const Kunlaboro::Message& msg) { mInert = static_cast<Components::Inertia*>(msg.sender); });
     requireComponent("Components.ShapeDrawable", [this](const Kunlaboro::Message& msg)
     {
+        msg.sender->changeRequestPriority("LD26.Draw", 7);
+
         sf::ConvexShape* shape = new sf::ConvexShape(3);
         shape->setPoint(0, sf::Vector2f( 25,  0));
         shape->setPoint(1, sf::Vector2f(-25,  10));

@@ -83,8 +83,13 @@ public:
     SoundManager* getSound()       { Kunlaboro::Message msg = sendGlobalQuestion("Get.Sound"); if (msg.handled) return boost::any_cast<SoundManager*>(msg.payload); return NULL; }
     sf::Font* getFont()            { Kunlaboro::Message msg = sendGlobalQuestion("Get.Font"); if (msg.handled) return boost::any_cast<sf::Font*>(msg.payload); return NULL; }
 
+protected:
+    void setHandled();
+
 private:
-    inline void update(const Kunlaboro::Message& msg) { update(boost::any_cast<float>(msg.payload));              }
-    inline void draw(const Kunlaboro::Message& msg)   { draw  (*boost::any_cast<sf::RenderTarget*>(msg.payload)); }
-    inline void drawUi(const Kunlaboro::Message& msg) { drawUi(*boost::any_cast<sf::RenderTarget*>(msg.payload)); }
+    Kunlaboro::Message* mCurMsg;
+
+    inline void update(const Kunlaboro::Message& msg) { mCurMsg = const_cast<Kunlaboro::Message*>(&msg); update(boost::any_cast<float>(msg.payload)); mCurMsg = NULL;              }
+    inline void draw(const Kunlaboro::Message& msg)   { mCurMsg = const_cast<Kunlaboro::Message*>(&msg); draw  (*boost::any_cast<sf::RenderTarget*>(msg.payload)); mCurMsg = NULL; }
+    inline void drawUi(const Kunlaboro::Message& msg) { mCurMsg = const_cast<Kunlaboro::Message*>(&msg); drawUi(*boost::any_cast<sf::RenderTarget*>(msg.payload)); mCurMsg = NULL; }
 };

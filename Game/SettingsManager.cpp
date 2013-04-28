@@ -52,14 +52,14 @@ void SettingsManager::handleArgs(std::list<std::string>& stack)
             std::string vol = stack.back();
             stack.pop_back();
 
-            mSettings["Music Volume"] = atof(vol.c_str());
+            mSettings["Music Volume"] = (float)atof(vol.c_str());
         }
         else if (val == "-s")
         {
             std::string vol = stack.back();
             stack.pop_back();
 
-            mSettings["Sound Volume"] = atof(vol.c_str());
+            mSettings["Sound Volume"] = (float)atof(vol.c_str());
         }
     }
 }

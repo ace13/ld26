@@ -101,6 +101,12 @@ void IState::addedToEntity()
     setup();
 }
 
+void IState::setHandled()
+{
+    if (mCurMsg != NULL)
+        mCurMsg->handled = true;
+}
+
 StateManager::Internals::Internals(StateManager& man) : Kunlaboro::Component("StateManager.Internals"), mState(man) { }
 void StateManager::Internals::addedToEntity()
 {
@@ -133,6 +139,7 @@ void StateManager::Internals::addedToEntity()
         else if (mSongTimeout == 0 && mSongPopout == 0 && !mCurrentSong.empty())
             mCurrentSong.clear();
     });
+    changeRequestPriority("LD26.Update", -11);
     requestMessage("LD26.DrawUi",  [this](const Kunlaboro::Message& msg)
     {
         sf::RenderTarget& target = *boost::any_cast<sf::RenderTarget*>(msg.payload);

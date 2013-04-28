@@ -17,5 +17,16 @@ public:
     virtual void drawUi(sf::RenderTarget& target);
 
 private:
+    bool mModePressed;
+
+    float mEditorZoom;
+    float mEditorRot;
+
+    float mToneIn;
+
+    bool mInEditor;
+    sf::View mSnapshot;
+
     Kunlaboro::EntityId mWorld;
+    Kunlaboro::EntityId mPlayer;
 };

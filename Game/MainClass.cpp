@@ -11,7 +11,7 @@
 #include <iostream>
 #include <list>
 
-static const int MAX_BINDS = 4;
+static const int MAX_BINDS = 6;
 
 MainClass::MainClass(int argc, char** argv) : mSounds(mSettings)
 {
@@ -66,6 +66,18 @@ MainClass::MainClass(int argc, char** argv) : mSounds(mSettings)
         ev.key.code = sf::Keyboard::D;
 
         mInput.addBind("Right", ev);
+
+        ev.key.code = sf::Keyboard::LControl;
+
+        mInput.addBind("Action1", ev);
+
+        ev.key.code = sf::Keyboard::LShift;
+
+        mInput.addBind("Action2", ev);
+
+        ev.key.code = sf::Keyboard::Tab;
+
+        mInput.addBind("Mode", ev);
     }
 
     // Music
@@ -158,6 +170,10 @@ int MainClass::operator()()
                 bind = "Left"; break;
             case 3:
                 bind = "Right"; break;
+            case 4:
+                bind = "Action"; break;
+            case 5:
+                bind = "Mode"; break;
             }
 
             if (!bind.empty())

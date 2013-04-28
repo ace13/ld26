@@ -53,9 +53,9 @@ void InputManager::handleEvent(const sf::Event& ev)
             switch(it->second.Bind)
             {
             case Input::Bind_Key:
-                equal = found.Key.Alt == it->second.Key.Alt &&
+                equal = /*found.Key.Alt == it->second.Key.Alt &&
                         found.Key.Ctrl == it->second.Key.Ctrl &&
-                        found.Key.Shift == it->second.Key.Shift &&
+                        found.Key.Shift == it->second.Key.Shift &&*/
                         found.Key.Key == it->second.Key.Key;
                 break;
             case Input::Bind_Axis:
