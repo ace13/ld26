@@ -178,7 +178,7 @@ void GameState::update(float dt)
 
         if (act2)
         {
-            mEditorRot += (right - left) * 100 * dt;
+            mEditorRot += (left - right) * 100 * dt;
             mEditorZoom += (down - up) * 150 * dt;
         }
 
@@ -253,5 +253,56 @@ void GameState::draw(sf::RenderTarget& target)
 }
 void GameState::drawUi(sf::RenderTarget& target)
 {
-    
+    if (!mInEditor)
+        return;
+
+    Kunlaboro::Message msg = sendGlobalQuestion("Get.GameView");
+    sf::View& gameView = *boost::any_cast<sf::View*>(msg.payload);
+
+    msg = sendQuestionToEntity(mPlayer, "GetShape");
+    sf::Shape* shape = boost::any_cast<sf::Shape*>(msg.payload);
+    sf::Transform playerToUITransform;
+    sf::Vector2f scale = target.getView().getSize();
+    scale.x /= gameView.getSize().x;
+    scale.y /= gameView.getSize().y;
+    playerToUITransform.rotate(shape->getRotation(), sf::Vector2f(0,0)).
+        translate(shape->getPosition() - gameView.getCenter()).
+        translate(target.getView().getSize()/2.f);//.
+
+        //scale(scale);
+
+
+
+    /*
+    playerToUITransform.rotate(shape->getRotation());
+    playerToUITransform.scale(gameView.getSize());
+
+    playerToUITransform.translate(target.getView().getCenter());
+    playerToUITransform.rotate(-gameView.getRotation());
+    */
+    for (int i = 0; i < shape->getPointCount(); ++i)
+    {
+        sf::Vector2f pos = shape->getPoint(i) - shape->getOrigin();
+        {
+            sf::Transform rot;
+            rot.rotate(shape->getRotation()-gameView.getRotation());
+            pos = rot.transformPoint(pos);
+        }
+        pos += shape->getPosition();
+        //pos = shape->getTransform().transformPoint(pos);
+        pos -= gameView.getCenter();
+        pos.x *= scale.x + 0.25;
+        pos.y *= scale.y + 0.25;
+        pos += target.getView().getCenter();
+
+        sf::CircleShape circ(8.f);
+        circ.setOrigin(8,8);
+        circ.setFillColor(sf::Color::Transparent);
+        circ.setOutlineColor(sf::Color::Black);
+        circ.setOutlineThickness(4.f);
+
+        circ.setPosition(pos);
+
+        target.draw(circ);
+    }
 }
